@@ -1,0 +1,45 @@
+# Environment
+.env
+*.env
+
+# Synthea generated data — regenerate with: make generate
+data/synthea_output/
+
+# dbt
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+dbt_project/.user.yml
+
+# DuckDB dev database
+*.duckdb
+*.duckdb.wal
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dagster
+$DAGSTER_HOME/
+dagster_pipelines/dagster_home/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+desktop.ini
+Thumbs.db
+
+# Large binaries — stored in C:\Tools\, not repo
+*.jar
+tools/

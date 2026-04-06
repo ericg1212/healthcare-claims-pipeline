@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install flake8 bandit pip-audit
+      - name: flake8
+        run: flake8 synthea_parser/ dagster_pipelines/ scripts/ tests/
+      - name: bandit
+        run: bandit -r synthea_parser/ dagster_pipelines/ -ll
+      - name: pip-audit
+        run: pip-audit -r requirements.txt
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: pytest
+        run: pytest tests/ -v --cov=synthea_parser --cov=dagster_pipelines
+
+  dbt-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dbt
+        run: pip install dbt-core==1.9.10 dbt-duckdb==1.9.6
+      - name: dbt compile (DuckDB)
+        run: |
+          cd dbt_project
+          dbt deps
+          dbt compile --profiles-dir profiles/duckdb
