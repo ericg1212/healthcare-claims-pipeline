@@ -37,20 +37,20 @@ parse-dev:
 .PHONY: dbt-dev
 dbt-dev:
 	@echo "Running dbt against DuckDB (dev)..."
-	cd dbt_project && dbt build --profiles-dir profiles/duckdb
+	cd dbt_project && dbt build --profiles-dir profiles --target dev
 
 .PHONY: dbt-snowflake
 dbt-snowflake:
-	@echo "Running dbt against Snowflake (demo)..."
-	cd dbt_project && dbt build --profiles-dir profiles/snowflake
+	@echo "Running dbt against Snowflake (prod)..."
+	cd dbt_project && dbt build --profiles-dir profiles --target prod
 
 .PHONY: dbt-test
 dbt-test:
-	cd dbt_project && dbt test --profiles-dir profiles/duckdb
+	cd dbt_project && dbt test --profiles-dir profiles --target dev
 
 .PHONY: dbt-freshness
 dbt-freshness:
-	cd dbt_project && dbt source freshness --profiles-dir profiles/duckdb
+	cd dbt_project && dbt source freshness --profiles-dir profiles --target dev
 
 # ── Dagster ──────────────────────────────────────────────────────
 .PHONY: dagster
@@ -63,8 +63,13 @@ dagster:
 run: generate parse-dev dbt-dev
 	@echo "Full pipeline run complete (DuckDB dev mode)."
 
+.PHONY: load-snowflake
+load-snowflake:
+	@echo "Loading fixture data into Snowflake RAW..."
+	python scripts/create_snowflake_fixtures.py
+
 .PHONY: run-snowflake
-run-snowflake: generate parse dbt-snowflake
+run-snowflake: load-snowflake dbt-snowflake
 	@echo "Full pipeline run complete (Snowflake)."
 
 # ── Vocab load ───────────────────────────────────────────────────

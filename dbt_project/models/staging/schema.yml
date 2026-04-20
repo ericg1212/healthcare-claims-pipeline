@@ -1,0 +1,178 @@
+version: 2
+
+models:
+  - name: stg_person
+    description: "Cleaned patient demographics mapped to OMOP PERSON table"
+    columns:
+      - name: person_id
+        description: "OMOP person_id — primary key"
+        tests:
+          - not_null
+          - unique
+      - name: birth_year
+        description: "Year of birth — day-level precision stripped for de-identification"
+        tests:
+          - not_null
+      - name: gender_source_value
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['M', 'F']
+              config:
+                where: "gender_source_value is not null"
+
+  - name: stg_claim_header
+    description: >
+      Claim-level header data from Synthea EOB resources. Denial flag derived from
+      payment=0 on insured claims. CARC attribution applied in mart layer.
+    columns:
+      - name: claim_id
+        description: "Primary key — one row per claim"
+        tests:
+          - not_null
+          - unique
+      - name: patient_id
+        description: "FK to stg_person.person_id"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_person')
+                field: person_id
+      - name: is_denied
+        description: "True when insured claim has payment=0 and submitted>0"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+              config:
+                where: "is_denied is not null"
+      - name: denied_amount
+        tests:
+          - not_null
+
+  - name: stg_claim_line
+    description: >
+      Line-level claim detail from Synthea EOB. One row per procedure line per claim.
+      Denial flag derived from payment=0 with submitted>0.
+    columns:
+      - name: claim_line_id
+        description: "Primary key — one row per claim line"
+        tests:
+          - not_null
+          - unique
+      - name: claim_id
+        description: "FK to stg_claim_header.claim_id"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_claim_header')
+                field: claim_id
+      - name: sequence
+        tests:
+          - not_null
+      - name: procedure_code
+        tests:
+          - not_null
+      - name: submitted_amount
+        tests:
+          - not_null
+      - name: payment_amount
+        tests:
+          - not_null
+      - name: denied_amount
+        tests:
+          - not_null
+      - name: is_denied_line
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+
+  - name: stg_visit_occurrence
+    description: "Clinical encounters — one row per visit"
+    columns:
+      - name: visit_occurrence_id
+        tests:
+          - not_null
+          - unique
+      - name: person_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_person')
+                field: person_id
+      - name: visit_start_datetime
+        tests:
+          - not_null
+
+  - name: stg_condition_occurrence
+    description: "Diagnosed conditions — one row per condition per encounter"
+    columns:
+      - name: condition_occurrence_id
+        tests:
+          - not_null
+          - unique
+      - name: person_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_person')
+                field: person_id
+      - name: condition_source_value
+        tests:
+          - not_null
+      - name: condition_source_vocabulary
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['ICD10CM', 'SNOMED']
+
+  - name: stg_drug_exposure
+    description: "Medication prescriptions — one row per drug per encounter"
+    columns:
+      - name: drug_exposure_id
+        tests:
+          - not_null
+          - unique
+      - name: person_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_person')
+                field: person_id
+      - name: drug_source_value
+        tests:
+          - not_null
+      - name: drug_source_vocabulary
+        tests:
+          - not_null
+
+  - name: stg_payer_plan_period
+    description: "Insurance coverage periods — one row per coverage period per patient"
+    columns:
+      - name: payer_plan_period_id
+        tests:
+          - not_null
+          - unique
+      - name: person_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_person')
+                field: person_id
+      - name: payer_source_value
+        tests:
+          - not_null
+      - name: payer_plan_period_start_date
+        tests:
+          - not_null

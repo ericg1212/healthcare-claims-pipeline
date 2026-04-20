@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: fct_denials
+    description: >
+      One row per denied claim. CARC code assigned via rule-based logic in dbt;
+      denial_type classifies systematic vs random denials.
+    columns:
+      - name: claim_id
+        description: "Primary key — one row per denied claim"
+        tests:
+          - not_null
+          - unique
+      - name: patient_id
+        tests:
+          - not_null
+      - name: payer_name
+        tests:
+          - not_null
+      - name: carc_code
+        description: "Claim Adjustment Reason Code — 197 (dialysis), 96 (Medicaid pharmacy), 16 (other)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['197', '96', '16']
+      - name: denial_type
+        description: "systematic = payer/procedure pattern; random = catch-all"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['systematic', 'random']
+      - name: denied_amount
+        tests:
+          - not_null
+
+  - name: dim_patient
+    description: "One row per patient with age bands and demographics"
+    columns:
+      - name: person_id
+        tests:
+          - not_null
+          - unique
+      - name: birth_year
+        tests:
+          - not_null
+      - name: age_group
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['0-17', '18-34', '35-49', '50-64', '65+']
+      - name: gender
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: "Date spine 2020-01-01 through 2029-12-31"
+    columns:
+      - name: date_day
+        tests:
+          - not_null
+          - unique
+      - name: year
+        tests:
+          - not_null
+      - name: is_weekend
+        tests:
+          - not_null
+
+  - name: dim_provider
+    description: "Distinct providers from visit_occurrence"
+    columns:
+      - name: provider_id
+        tests:
+          - not_null
+          - unique

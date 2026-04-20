@@ -4,6 +4,7 @@
 
 # Synthea generated data — regenerate with: make generate
 data/synthea_output/
+output/
 
 # dbt
 dbt_project/target/

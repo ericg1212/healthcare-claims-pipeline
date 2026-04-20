@@ -1,0 +1,22 @@
+healthcare_claims:
+  target: dev
+  outputs:
+
+    # ── Local development (DuckDB — zero cost, no credentials) ────
+    dev:
+      type: duckdb
+      path: "../data/dev.duckdb"
+      schema: raw        # default schema; overridden per layer by dbt_project.yml
+      threads: 1
+
+    # ── Production (Snowflake) ────────────────────────────────────
+    prod:
+      type: snowflake
+      account:   "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user:      "{{ env_var('SNOWFLAKE_USER') }}"
+      password:  "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      database:  HEALTHCARE_CLAIMS
+      warehouse: healthcare_wh
+      schema:    raw
+      role:      ACCOUNTADMIN
+      threads:   4

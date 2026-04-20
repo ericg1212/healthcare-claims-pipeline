@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "FHIR R4 data parsed from Synthea and loaded into the RAW schema"
+    schema: raw
+    # Source freshness: warns if RAW tables go stale — closes the Project 1 observability gap
+    freshness:
+      warn_after:  {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    loaded_at_field: loaded_at
+
+    tables:
+      - name: raw_person
+        description: "Patient demographics from Synthea Patient FHIR resources"
+
+      - name: raw_claim_header
+        description: "Claim-level data from Synthea ExplanationOfBenefit FHIR resources"
+
+      - name: raw_claim_line
+        description: "Line-item data from EOB.item[] arrays — one row per service line"
+
+      - name: raw_visit_occurrence
+        description: "Clinical encounters from Synthea Encounter FHIR resources"
+
+      - name: raw_condition_occurrence
+        description: "Diagnoses from Synthea Condition FHIR resources — ICD-10 and SNOMED codes"
+
+      - name: raw_drug_exposure
+        description: "Medication prescriptions from Synthea MedicationRequest FHIR resources — RxNorm codes"
+
+      - name: raw_payer_plan_period
+        description: "Insurance coverage periods from Synthea Coverage FHIR resources"
