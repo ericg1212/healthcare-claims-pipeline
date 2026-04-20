@@ -10,7 +10,6 @@ implement the pattern here so the pipeline is production-ready by construction.
 
 from __future__ import annotations
 import hashlib
-import uuid
 from datetime import datetime
 from typing import Optional
 

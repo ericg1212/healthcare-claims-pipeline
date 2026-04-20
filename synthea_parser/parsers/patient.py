@@ -8,7 +8,6 @@ other direct identifiers would be hashed or dropped here before any storage.
 
 from __future__ import annotations
 from synthea_parser.models import Person
-from synthea_parser.utils import parse_datetime
 
 
 def parse_patient(resource: dict) -> Person:

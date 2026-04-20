@@ -51,4 +51,4 @@ jobs:
         run: |
           cd dbt_project
           dbt deps
-          dbt compile --profiles-dir profiles/duckdb
+          dbt compile --profiles-dir profiles
