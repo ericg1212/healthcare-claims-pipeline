@@ -3,13 +3,18 @@
 with t2d as (
     select distinct person_id
     from {{ ref('stg_condition_occurrence') }}
-    where condition_source_value like 'E11%'
+    where condition_source_value = '44054006'
 ),
 
 ckd as (
     select distinct person_id
     from {{ ref('stg_condition_occurrence') }}
-    where condition_source_value like 'N18%'
+    where condition_source_value in (
+        '431855005',  -- CKD stage 1
+        '431856006',  -- CKD stage 2
+        '433144002',  -- CKD stage 3
+        '431857002'   -- CKD stage 4
+    )
 ),
 
 metformin as (
