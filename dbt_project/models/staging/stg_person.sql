@@ -6,7 +6,11 @@ select
       birth_year,
       birth_month,
       birth_day,
-      gender_source_value,
+      case gender_source_value
+          when 'male'   then 'M'
+          when 'female' then 'F'
+          else               'U'
+      end as gender_source_value,
       race_source_value,
       ethnicity_source_value,
       location_state,

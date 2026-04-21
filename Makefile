@@ -48,6 +48,10 @@ dbt-snowflake:
 dbt-test:
 	cd dbt_project && dbt test --profiles-dir profiles --target dev
 
+.PHONY: dbt-test-prod
+dbt-test-prod:
+	cd dbt_project && dbt test --profiles-dir profiles --target prod
+
 .PHONY: dbt-freshness
 dbt-freshness:
 	cd dbt_project && dbt source freshness --profiles-dir profiles --target dev

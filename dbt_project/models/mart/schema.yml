@@ -18,7 +18,7 @@ models:
         tests:
           - not_null
       - name: carc_code
-        description: "Claim Adjustment Reason Code — 197 (dialysis), 96 (Medicaid pharmacy), 16 (other)"
+        description: "Claim Adjustment Reason Code — 197 (telehealth prior-auth gap), 96 (Medicaid pharmacy formulary), 16 (documentation gap/other)"
         tests:
           - not_null
           - accepted_values:
@@ -76,3 +76,20 @@ models:
         tests:
           - not_null
           - unique
+
+  - name: fct_rwe_cohort
+    description: "T2D + CKD comorbidity cohort with metformin flag — one row per patient"
+    columns:
+      - name: person_id
+        tests:
+          - not_null
+          - unique
+      - name: on_metformin
+        tests:
+          - not_null
+      - name: age_group
+        tests:
+          - not_null
+      - name: gender
+        tests:
+          - not_null

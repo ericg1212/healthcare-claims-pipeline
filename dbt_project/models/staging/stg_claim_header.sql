@@ -20,4 +20,3 @@ select
     procedure_display,
     loaded_at
   from {{ source('raw', 'raw_claim_header') }}
-  where claim_date is not null

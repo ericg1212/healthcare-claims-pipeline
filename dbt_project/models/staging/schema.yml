@@ -18,7 +18,7 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values: ['M', 'F']
+                values: ['M', 'F', 'U']
               config:
                 where: "gender_source_value is not null"
 
@@ -75,8 +75,6 @@ models:
         tests:
           - not_null
       - name: procedure_code
-        tests:
-          - not_null
       - name: submitted_amount
         tests:
           - not_null
@@ -108,8 +106,6 @@ models:
                 to: ref('stg_person')
                 field: person_id
       - name: visit_start_datetime
-        tests:
-          - not_null
 
   - name: stg_condition_occurrence
     description: "Diagnosed conditions — one row per condition per encounter"

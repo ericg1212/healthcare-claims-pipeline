@@ -10,7 +10,7 @@
           denied_amount,
           claim_date,
           case
-              when procedure_display = 'Renal dialysis'  then '197'
+              when procedure_display = 'Telemedicine consultation with patient (procedure)' then '197'
               when payer_name = 'Medicaid'
                and claim_type = 'pharmacy'               then '96'
               else                                            '16'
