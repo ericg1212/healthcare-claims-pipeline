@@ -60,7 +60,7 @@ dbt-freshness:
 .PHONY: dagster
 dagster:
 	@echo "Starting Dagster UI at localhost:3000..."
-	dagster dev -f dagster_pipelines/definitions.py
+	dagster dev -m dagster_pipelines
 
 # ── Full pipeline ────────────────────────────────────────────────
 .PHONY: run
