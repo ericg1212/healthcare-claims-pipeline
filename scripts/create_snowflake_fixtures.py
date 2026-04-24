@@ -12,20 +12,12 @@ Prerequisites:
 Run from project root:
     python scripts/create_snowflake_fixtures.py
 """
-import os
-import snowflake.connector
+from scripts.snowflake_utils import get_connection as _get_conn
 
 
 def get_connection():
-    return snowflake.connector.connect(
-        account=os.environ["SNOWFLAKE_ACCOUNT"],
-        user=os.environ["SNOWFLAKE_USER"],
-        password=os.environ["SNOWFLAKE_PASSWORD"],
-        database="HEALTHCARE_CLAIMS",
-        warehouse="HEALTHCARE_WH",
-        role="ACCOUNTADMIN",
-        schema="RAW",
-    )
+    # SYSADMIN needed for DDL (CREATE TABLE) in this setup script
+    return _get_conn(role="SYSADMIN")
 
 
 DDL = """

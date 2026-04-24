@@ -1,0 +1,3 @@
+carc_code,denial_type,match_procedure,match_payer_name,match_claim_type
+197,systematic,Telemedicine consultation with patient (procedure),,
+96,systematic,,Medicaid,pharmacy

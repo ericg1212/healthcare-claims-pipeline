@@ -1,0 +1,6 @@
+condition_name,snomed_code,cohort_flag
+T2D,44054006,t2d
+CKD_stage1,431855005,ckd
+CKD_stage2,431856006,ckd
+CKD_stage3,433144002,ckd
+CKD_stage4,431857002,ckd

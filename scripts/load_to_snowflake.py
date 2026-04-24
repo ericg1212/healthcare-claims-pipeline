@@ -1,26 +1,13 @@
-import os
 import argparse
 import logging
 from pathlib import Path
-import snowflake.connector
+from scripts.snowflake_utils import get_connection
 from synthea_parser.bundle_processor import process_bundle
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 200  # bundles per Snowflake flush
-
-
-def get_connection():
-    return snowflake.connector.connect(
-        account=os.environ["SNOWFLAKE_ACCOUNT"],
-        user=os.environ["SNOWFLAKE_USER"],
-        password=os.environ["SNOWFLAKE_PASSWORD"],
-        database="HEALTHCARE_CLAIMS",
-        warehouse="HEALTHCARE_WH",
-        role="transformer",
-        schema="RAW",
-    )
 
 
 def truncate_raw(cur):

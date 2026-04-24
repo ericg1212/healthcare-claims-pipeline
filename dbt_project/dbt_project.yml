@@ -27,3 +27,16 @@ models:
     mart:
       +materialized: table
       +schema: mart
+
+seeds:
+  healthcare_claims:
+    +schema: mart
+    condition_codes:
+      +column_types:
+        snomed_code: varchar
+    denial_rules:
+      +column_types:
+        carc_code: varchar
+        match_procedure: varchar
+        match_payer_name: varchar
+        match_claim_type: varchar

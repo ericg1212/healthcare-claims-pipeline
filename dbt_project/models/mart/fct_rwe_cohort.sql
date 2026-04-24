@@ -1,20 +1,21 @@
 {{ config(materialized='table') }}
 
-with t2d as (
-    select distinct person_id
-    from {{ ref('stg_condition_occurrence') }}
-    where condition_source_value = '44054006'
+with condition_codes as (select * from {{ ref('condition_codes') }}),
+
+t2d as (
+    select distinct c.person_id
+    from {{ ref('stg_condition_occurrence') }} c
+    inner join condition_codes cc
+        on c.condition_source_value = cc.snomed_code
+    where cc.cohort_flag = 't2d'
 ),
 
 ckd as (
-    select distinct person_id
-    from {{ ref('stg_condition_occurrence') }}
-    where condition_source_value in (
-        '431855005',  -- CKD stage 1
-        '431856006',  -- CKD stage 2
-        '433144002',  -- CKD stage 3
-        '431857002'   -- CKD stage 4
-    )
+    select distinct c.person_id
+    from {{ ref('stg_condition_occurrence') }} c
+    inner join condition_codes cc
+        on c.condition_source_value = cc.snomed_code
+    where cc.cohort_flag = 'ckd'
 ),
 
 metformin as (

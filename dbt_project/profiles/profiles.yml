@@ -18,5 +18,5 @@ healthcare_claims:
       database:  HEALTHCARE_CLAIMS
       warehouse: healthcare_wh
       schema:    raw
-      role:      ACCOUNTADMIN
+      role:      TRANSFORMER
       threads:   4
