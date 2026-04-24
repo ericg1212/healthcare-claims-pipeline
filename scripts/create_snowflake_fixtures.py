@@ -12,7 +12,10 @@ Prerequisites:
 Run from project root:
     python scripts/create_snowflake_fixtures.py
 """
-from scripts.snowflake_utils import get_connection as _get_conn
+try:
+    from scripts.snowflake_utils import get_connection as _get_conn
+except ImportError:
+    from snowflake_utils import get_connection as _get_conn
 
 
 def get_connection():

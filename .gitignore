@@ -6,8 +6,9 @@
 data/synthea_output/
 output/
 
-# dbt
-dbt_project/target/
+# dbt — exclude compiled/run artifacts but keep manifest for Dagster
+dbt_project/target/*
+!dbt_project/target/manifest.json
 dbt_project/dbt_packages/
 dbt_project/logs/
 dbt_project/.user.yml

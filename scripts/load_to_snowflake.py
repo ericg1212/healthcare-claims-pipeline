@@ -1,7 +1,10 @@
 import argparse
 import logging
 from pathlib import Path
-from scripts.snowflake_utils import get_connection
+try:
+    from scripts.snowflake_utils import get_connection
+except ImportError:
+    from snowflake_utils import get_connection
 from synthea_parser.bundle_processor import process_bundle
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -171,9 +174,18 @@ def main():
     flush(cur, buf)
     conn.commit()
 
+    logger.info("Done. Loaded %d bundles. Row counts:", total)
+    raw_tables = [
+        "RAW_PERSON", "RAW_VISIT_OCCURRENCE", "RAW_CONDITION_OCCURRENCE",
+        "RAW_DRUG_EXPOSURE", "RAW_CLAIM_HEADER", "RAW_CLAIM_LINE",
+        "RAW_PAYER_PLAN_PERIOD",
+    ]
+    for table in raw_tables:
+        count = cur.execute(f"SELECT COUNT(*) FROM RAW.{table}").fetchone()[0]
+        logger.info("  %-30s %d rows", table, count)
+
     cur.close()
     conn.close()
-    logger.info("Done. Loaded %d bundles.", total)
 
 
 if __name__ == "__main__":
