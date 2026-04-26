@@ -1,4 +1,4 @@
-# Healthcare Claims Intelligence Pipeline
+# Denied: Healthcare Claims Intelligence Pipeline
 
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)
@@ -13,9 +13,11 @@ A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claim
 
 ## The Problem
 
-Most healthcare organizations know their denial rate. Few can tell you *which* denials are systematic — fixable before the claim is ever filed — versus which are random documentation gaps that will always exist at some rate. The difference has direct revenue implications: systematic denials (CARC 197, 96) represent recoverable revenue through submission rule changes; random denials (CARC 16) require workflow intervention.
+Healthcare organizations report a denial rate. What they rarely know is *why* — and whether the denials are fixable.
 
-The RWE angle is equally important. The OMOP CDM layer built for denial attribution can answer a completely different class of question — real-world drug utilization — without rebuilding the pipeline. Same data, same schema, different analytical lens.
+Systematic denials (CARC 197, 96) follow a pattern: the wrong claim type, the wrong formulary, a missing prior-auth. These are recoverable — fix the submission rule, stop the denial upstream. Random denials (CARC 16) are documentation gaps that will always exist at some rate. Treating them the same wastes resources on the unfixable.
+
+The same OMOP layer that classifies denials can answer a second question without rebuilding anything: are the right patients getting the right drugs? Same data, different lens — RWE at no additional pipeline cost.
 
 ---
 
