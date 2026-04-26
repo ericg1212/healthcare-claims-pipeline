@@ -5,7 +5,7 @@ dagster-webserver==1.13.1
 
 # ── dbt ──────────────────────────────────────────────────────────
 dbt-core==1.9.10              # stable LTS; within dagster-dbt range
-dbt-snowflake==1.9.4          # matches dbt-core 1.9.x
+dbt-snowflake==1.11.4          # matches dbt-core 1.9.x
 dbt-duckdb==1.9.6             # CI adapter — no Snowflake credits in CI
 
 # ── FHIR parser ──────────────────────────────────────────────────
