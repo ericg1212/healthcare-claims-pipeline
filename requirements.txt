@@ -1,6 +1,7 @@
 # ── Core orchestration ───────────────────────────────────────────
-dagster==1.12.22
-dagster-dbt==0.28.22          # requires dbt-core>=1.7,<1.12
+dagster==1.13.1
+dagster-dbt==0.29.1
+dagster-webserver==1.13.1
 
 # ── dbt ──────────────────────────────────────────────────────────
 dbt-core==1.9.10              # stable LTS; within dagster-dbt range
@@ -9,16 +10,18 @@ dbt-duckdb==1.9.6             # CI adapter — no Snowflake credits in CI
 
 # ── FHIR parser ──────────────────────────────────────────────────
 pydantic==2.11.3              # FHIR resource models + validation
-snowflake-sqlalchemy==1.7.3   # Snowflake bulk load
-snowflake-connector-python==3.14.0
+snowflake-sqlalchemy>=1.6.0   # Snowflake bulk load
+snowflake-connector-python>=3.16.0
 
 # ── Data utilities ───────────────────────────────────────────────
 pandas==2.2.3
 pyarrow==20.0.0
 
 # ── Testing ──────────────────────────────────────────────────────
-pytest==8.3.5
+pytest==9.0.3
 pytest-cov==6.1.0
+pyopenssl>=26.0.0
+cryptography>=46.0.7
 
 # ── CI / security ────────────────────────────────────────────────
 flake8==7.2.0

@@ -14,13 +14,11 @@ models:
         tests:
           - not_null
       - name: gender_source_value
+        description: "Gender from Synthea Patient resource — M, F, or U (unknown)"
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['M', 'F', 'U']
-              config:
-                where: "gender_source_value is not null"
+              values: ['M', 'F', 'U']
 
   - name: stg_claim_header
     description: >
@@ -37,19 +35,16 @@ models:
         tests:
           - not_null
           - relationships:
-              arguments:
-                to: ref('stg_person')
-                field: person_id
+              to: ref('stg_person')
+              field: person_id
       - name: is_denied
         description: "True when insured claim has payment=0 and submitted>0"
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: [true, false]
-              config:
-                where: "is_denied is not null"
+              values: [true, false]
       - name: denied_amount
+        description: "Dollar amount denied — 0 for paid claims, submitted_amount for denied claims"
         tests:
           - not_null
 
@@ -68,87 +63,98 @@ models:
         tests:
           - not_null
           - relationships:
-              arguments:
-                to: ref('stg_claim_header')
-                field: claim_id
+              to: ref('stg_claim_header')
+              field: claim_id
       - name: sequence
+        description: "Line item sequence number within the claim"
         tests:
           - not_null
       - name: procedure_code
+        description: "CPT/HCPCS procedure code from EOB.item[].productOrService"
       - name: submitted_amount
+        description: "Amount billed to payer for this line item"
         tests:
           - not_null
       - name: payment_amount
+        description: "Amount paid by payer — 0 on denied lines"
         tests:
           - not_null
       - name: denied_amount
+        description: "Difference between submitted and payment amount — 0 on paid lines"
         tests:
           - not_null
       - name: is_denied_line
+        description: "True when payment_amount=0 and submitted_amount>0 at line level"
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: [true, false]
+              values: [true, false]
 
   - name: stg_visit_occurrence
     description: "Clinical encounters — one row per visit"
     columns:
       - name: visit_occurrence_id
+        description: "Primary key — one row per encounter"
         tests:
           - not_null
           - unique
       - name: person_id
+        description: "FK to stg_person.person_id"
         tests:
           - not_null
           - relationships:
-              arguments:
-                to: ref('stg_person')
-                field: person_id
+              to: ref('stg_person')
+              field: person_id
       - name: visit_start_datetime
+        description: "Encounter start timestamp from Synthea Encounter FHIR resource"
 
   - name: stg_condition_occurrence
     description: "Diagnosed conditions — one row per condition per encounter"
     columns:
       - name: condition_occurrence_id
+        description: "Primary key — one row per diagnosed condition per encounter"
         tests:
           - not_null
           - unique
       - name: person_id
+        description: "FK to stg_person.person_id"
         tests:
           - not_null
           - relationships:
-              arguments:
-                to: ref('stg_person')
-                field: person_id
+              to: ref('stg_person')
+              field: person_id
       - name: condition_source_value
+        description: "ICD-10-CM or SNOMED code from Synthea Condition FHIR resource"
         tests:
           - not_null
       - name: condition_source_vocabulary
+        description: "Code system — ICD10CM or SNOMED"
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['ICD10CM', 'SNOMED']
+              values: ['ICD10CM', 'SNOMED']
 
   - name: stg_drug_exposure
     description: "Medication prescriptions — one row per drug per encounter"
     columns:
       - name: drug_exposure_id
+        description: "Primary key — one row per prescription per encounter"
         tests:
           - not_null
           - unique
       - name: person_id
+        description: "FK to stg_person.person_id"
         tests:
           - not_null
           - relationships:
-              arguments:
-                to: ref('stg_person')
-                field: person_id
+              to: ref('stg_person')
+              field: person_id
       - name: drug_source_value
+        description: "RxNorm code from Synthea MedicationRequest FHIR resource"
         tests:
           - not_null
       - name: drug_source_vocabulary
+        description: "Code system — RxNorm in all Synthea output"
         tests:
           - not_null
 
@@ -156,19 +162,22 @@ models:
     description: "Insurance coverage periods — one row per coverage period per patient"
     columns:
       - name: payer_plan_period_id
+        description: "Primary key — one row per coverage period per patient"
         tests:
           - not_null
           - unique
       - name: person_id
+        description: "FK to stg_person.person_id"
         tests:
           - not_null
           - relationships:
-              arguments:
-                to: ref('stg_person')
-                field: person_id
+              to: ref('stg_person')
+              field: person_id
       - name: payer_source_value
+        description: "Payer name from Synthea Coverage FHIR resource"
         tests:
           - not_null
       - name: payer_plan_period_start_date
+        description: "Coverage start date — used for temporal join with claims"
         tests:
           - not_null
