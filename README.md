@@ -11,7 +11,7 @@ A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claim
 
 ---
 
-## The Problem
+## Not All Denials Are Equal
 
 Healthcare organizations report a denial rate. What they rarely know is *why* — and whether the denials are fixable.
 
