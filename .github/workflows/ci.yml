@@ -24,13 +24,7 @@ jobs:
       - name: bandit
         run: bandit -r synthea_parser/ dagster_pipelines/ -ll
       - name: pip-audit
-        run: |
-          pip-audit -r requirements.txt \
-            --ignore-vuln CVE-2026-27448 \
-            --ignore-vuln CVE-2026-27459 \
-            --ignore-vuln CVE-2026-26007 \
-            --ignore-vuln CVE-2026-34073 \
-            --ignore-vuln CVE-2026-39892
+        run: pip-audit -r requirements.txt
 
   test:
     runs-on: ubuntu-latest
