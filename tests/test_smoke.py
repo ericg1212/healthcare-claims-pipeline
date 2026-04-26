@@ -110,7 +110,7 @@ def test_get_coding_no_preferred_match_returns_empty():
 @pytest.mark.parametrize("payer,expected", [
     ("Medicare",              True),
     ("Medicaid",              True),
-    ("Blue Cross Blue Shield",True),
+    ("Blue Cross Blue Shield", True),
     ("NO_INSURANCE",          False),
     ("no_insurance",          False),
     ("",                      False),
@@ -125,7 +125,7 @@ def test_is_insured(payer, expected):
 @pytest.mark.parametrize("payer,submitted,payment,expected", [
     ("Medicare",    350.0,   0.0,  True),   # insured, full denial
     ("Medicare",    350.0, 280.0,  False),  # insured, partial payment = not denied
-    ("NO_INSURANCE",350.0,   0.0,  False),  # self-pay excluded
+    ("NO_INSURANCE", 350.0,   0.0,  False),  # self-pay excluded
     ("Medicaid",      0.0,   0.0,  False),  # zero submitted = no claim filed
     ("Medicaid",    120.0,   0.0,  True),   # pharmacy denial
     (None,          100.0,   0.0,  False),  # no payer

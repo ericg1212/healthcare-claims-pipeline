@@ -31,43 +31,36 @@ def bulk_insert(cur, sql, rows, chunk_size=5000):
 
 def flush(cur, buf):
     if buf["persons"]:
-        bulk_insert(cur,
-            "INSERT INTO RAW.RAW_PERSON VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())",
-            buf["persons"])
+        sql = "INSERT INTO RAW.RAW_PERSON VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())"
+        bulk_insert(cur, sql, buf["persons"])
 
     if buf["visits"]:
-        bulk_insert(cur,
-            "INSERT INTO RAW.RAW_VISIT_OCCURRENCE VALUES (%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())",
-            buf["visits"])
+        sql = "INSERT INTO RAW.RAW_VISIT_OCCURRENCE VALUES (%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())"
+        bulk_insert(cur, sql, buf["visits"])
 
     if buf["conditions"]:
-        bulk_insert(cur,
-            "INSERT INTO RAW.RAW_CONDITION_OCCURRENCE VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())",
-            buf["conditions"])
+        sql = "INSERT INTO RAW.RAW_CONDITION_OCCURRENCE VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())"
+        bulk_insert(cur, sql, buf["conditions"])
 
     if buf["drugs"]:
-        bulk_insert(cur,
-            "INSERT INTO RAW.RAW_DRUG_EXPOSURE VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())",
-            buf["drugs"])
+        sql = "INSERT INTO RAW.RAW_DRUG_EXPOSURE VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())"
+        bulk_insert(cur, sql, buf["drugs"])
 
     if buf["claim_headers"]:
         # RAW_CLAIM_HEADER: claim_id, patient_id, payer_id, payer_name,
         #   claim_type, submitted_amount, payment_amount, claim_date, procedure_display
-        bulk_insert(cur,
-            "INSERT INTO RAW.RAW_CLAIM_HEADER VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())",
-            buf["claim_headers"])
+        sql = "INSERT INTO RAW.RAW_CLAIM_HEADER VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())"
+        bulk_insert(cur, sql, buf["claim_headers"])
 
     if buf["claim_lines"]:
         # RAW_CLAIM_LINE: claim_line_id, claim_id, sequence, procedure_code,
         #   procedure_display, quantity, submitted_amount, payment_amount
-        bulk_insert(cur,
-            "INSERT INTO RAW.RAW_CLAIM_LINE VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())",
-            buf["claim_lines"])
+        sql = "INSERT INTO RAW.RAW_CLAIM_LINE VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())"
+        bulk_insert(cur, sql, buf["claim_lines"])
 
     if buf["payer_periods"]:
-        bulk_insert(cur,
-            "INSERT INTO RAW.RAW_PAYER_PLAN_PERIOD VALUES (%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())",
-            buf["payer_periods"])
+        sql = "INSERT INTO RAW.RAW_PAYER_PLAN_PERIOD VALUES (%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP())"
+        bulk_insert(cur, sql, buf["payer_periods"])
 
     for key in buf:
         buf[key].clear()
@@ -134,9 +127,9 @@ def main():
         # Build claim_id → first procedure_display lookup from lines
         # procedure_display drives CARC 197 (Renal dialysis) in fct_denials
         first_proc = {}
-        for l in bundle.claim_lines:
-            if l.claim_id not in first_proc and l.procedure_display:
-                first_proc[l.claim_id] = l.procedure_display
+        for line in bundle.claim_lines:
+            if line.claim_id not in first_proc and line.procedure_display:
+                first_proc[line.claim_id] = line.procedure_display
 
         for h in bundle.claim_headers:
             buf["claim_headers"].append((
@@ -150,15 +143,15 @@ def main():
                 h.claim_start_date,    # stored as claim_date in raw table
                 first_proc.get(h.claim_id)))  # procedure_display from first line
 
-        for l in bundle.claim_lines:
+        for line in bundle.claim_lines:
             buf["claim_lines"].append((
-                l.claim_line_id, l.claim_id,
-                l.line_sequence,           # stored as sequence in raw table
-                l.procedure_source_value,  # stored as procedure_code in raw table
-                l.procedure_display,
-                None,                      # quantity — not in ClaimLine model
-                0.0,                       # submitted_amount — not in ClaimLine model
-                0.0))                      # payment_amount — not in ClaimLine model
+                line.claim_line_id, line.claim_id,
+                line.line_sequence,           # stored as sequence in raw table
+                line.procedure_source_value,  # stored as procedure_code in raw table
+                line.procedure_display,
+                None,                         # quantity — not in ClaimLine model
+                0.0,                          # submitted_amount — not in ClaimLine model
+                0.0))                         # payment_amount — not in ClaimLine model
 
         for pp in bundle.payer_periods:
             buf["payer_periods"].append((
