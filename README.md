@@ -11,11 +11,24 @@ Not every denied claim is a rework opportunity. This pipeline classifies 257K de
 
 ---
 
+## Findings: 495,412 Claims, 51.9% Denial Rate
+
+Three CARC codes, two root cause classes — systematic denials trace to prior-auth and formulary gaps; CARC 16 at 89.3% is a documentation quality signal, independent of diagnosis.
+
+| Queue | CARC | Denial Reason | Claim Count | Share of Denials |
+|-------|------|---------------|-------------|-----------------|
+| Telehealth prior-auth | 197 | Non-covered charge — renal dialysis / telehealth not under plan | 3,700 | 1.4% |
+| Medicaid pharmacy formulary | 96 | Non-covered charge — drug not on Medicaid formulary | 23,900 | 9.3% |
+| Documentation gaps | 16 | Claim lacks information to adjudicate | 229,400 | 89.3% |
+| **Total denied** | | | **257,000** | **51.9% denial rate** |
+
+**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level.
+
+---
+
 ## Fix the Submission, or Fix the Workflow?
 
-Tracking a denial rate is standard practice. Knowing which denials are worth acting on is less common — and that distinction shapes every decision downstream.
-
-At a **51.9% denial rate** across 495,412 claims, the $25–118 cost to rework a single denied claim compounds quickly. The more consequential issue is that those 257,000 denials aren't one problem — they're two fundamentally different problems, and treating them the same is where denial management budgets quietly disappear.
+Tracking a denial rate is standard practice. Knowing which denials are worth acting on is less common — and that distinction shapes every decision downstream. Those 257,000 denials aren't one problem — they're two fundamentally different problems, and treating them the same is where denial management budgets quietly disappear.
 
 **Systematic denials follow a pattern.** CARC 197 fires every time a renal dialysis or telehealth claim arrives without a prior authorization reference number. CARC 96 fires every time a Medicaid formulary conflict — catchable at prescribing — reaches adjudication instead. Same trigger, same code, every time. The services are covered; the submissions were incomplete. Fix the workflow once, stop the denial.
 
@@ -42,21 +55,6 @@ At a **51.9% denial rate** across 495,412 claims, the $25–118 cost to rework a
 | Rendering provider credentialing mismatch at the payer | Real-time credentialing status check against payer rosters at time of claim; automated re-credentialing alerts at 90/60/30 days before expiration |
 
 **The pipeline surfaces two work queues:** ~27,600 systematic claims each with a defined upstream fix, and 229,400 documentation failures requiring process-level intervention. That separation is the deliverable — without it, every denial looks like a rework candidate, and 89% of the effort lands where it can't move the rate.
-
----
-
-## Findings: 495,412 Claims, 51.9% Denial Rate
-
-Three CARC codes, two root cause classes — systematic denials trace to prior-auth and formulary gaps; CARC 16 at 89.3% is a documentation quality signal, independent of diagnosis.
-
-| Queue | CARC | Denial Reason | Claim Count | Share of Denials |
-|-------|------|---------------|-------------|-----------------|
-| Telehealth prior-auth | 197 | Non-covered charge — renal dialysis / telehealth not under plan | 3,700 | 1.4% |
-| Medicaid pharmacy formulary | 96 | Non-covered charge — drug not on Medicaid formulary | 23,900 | 9.3% |
-| Documentation gaps | 16 | Claim lacks information to adjudicate | 229,400 | 89.3% |
-| **Total denied** | | | **257,000** | **51.9% denial rate** |
-
-**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level.
 
 ---
 
