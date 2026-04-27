@@ -7,7 +7,7 @@
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square&logo=dagster&logoColor=white)
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
 
-Not every denied claim is a rework opportunity. This pipeline classifies 257K denied claims by root cause — separating systematic denials with a defined upstream fix from documentation failures where the problem isn't in the claim at all.
+Not every denied claim is a rework opportunity. This pipeline classifies 257K denied claims by root cause — systematic denials vs. documentation failures — and the remediation path differs fundamentally for each.
 
 ---
 
