@@ -13,7 +13,7 @@ Not every denied claim is a rework opportunity. This pipeline classifies 257K de
 
 ## Findings: 495,412 Claims, 51.9% Denial Rate
 
-Three CARC codes, two root cause classes — prior-auth and formulary gaps for the systematic denials; a documentation quality problem spanning 89.3% of denials regardless of diagnosis or coverage.
+CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each with a single upstream fix. CARC 16 at 89.3% is a documentation quality problem that cuts across all claim types.
 
 | Queue | CARC | Denial Reason | Claim Count | Share of Denials |
 |-------|------|---------------|-------------|-----------------|
