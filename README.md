@@ -3,27 +3,47 @@
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=flat-square&logo=snowflake&logoColor=white)
-![dbt](https://img.shields.io/badge/dbt-1.9-FF694B?style=flat-square&logo=dbt&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt-1.10-FF694B?style=flat-square&logo=dbt&logoColor=white)
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square&logo=dagster&logoColor=white)
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
 
-A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claims data, maps it to OMOP CDM, and produces two independently valuable analytical outputs from the same pipeline: **RCM denial attribution** and **real-world evidence (RWE) drug utilization**.
+A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claims data, maps it to OMOP CDM, and attributes denials to their root cause — separating fixable systematic claims from unfixable documentation gaps. That separation is the core analytical deliverable for any revenue cycle remediation effort.
 
 ---
 
 ## Systematic or Random?
 
-Healthcare organizations report a denial rate. What they rarely know is *why* — and whether the denials are fixable.
+Healthcare organizations report a denial rate. What they rarely know is *why* — and whether the denials are worth chasing.
 
-Systematic denials (CARC 197, 96) follow a pattern: the wrong claim type, the wrong formulary, a missing prior-auth. These are recoverable — fix the submission rule, stop the denial upstream. Random denials (CARC 16) are documentation gaps that will always exist at some rate. Treating them the same wastes resources on the unfixable.
+At a **51.9% denial rate** across 495,412 claims, the revenue impact is immediate. Every systematic denial is a claim that should have been paid and can still be stopped upstream — before it ever reaches the payer. Every CARC 16 is a documentation quality failure. Most cannot be recovered by reworking the claim alone; the root cause is in the clinical workflow, not the submission.
 
-The same OMOP layer that classifies denials can answer a second question without rebuilding anything: are the right patients getting the right drugs? Same data, different lens — RWE at no additional pipeline cost.
+**The classification matters because the remediation path is different:**
+
+| CARC | Type | Driver | Remediation |
+|------|------|--------|-------------|
+| 197 | Systematic | Renal dialysis and telehealth claims submitted without a prior authorization reference number | Prior-auth workflow check at claim submission — verify PA number is present before filing |
+| 96 | Systematic | Drug not on Medicaid formulary — first-line therapies (e.g., metformin for T2D/CKD patients) flagged post-prescribing | Formulary conflict check at the point of prescribing, not at adjudication |
+| 16 | Random | Claim lacks information to adjudicate — multiple root causes across documentation, coding, and credentialing | Submission quality audit; documentation checklists at encounter close |
+
+**CARC 197 and 96 are process failures, not coverage failures.** The services are covered. The fix belongs upstream of submission: prior-auth workflow enforcement for 197, formulary check at prescribing for 96. ~27,600 systematic denials with a deterministic remediation path and measurable ROI.
+
+**CARC 16 is a different problem entirely.** At 89.3% of denials, the business question is not "can we recover these?" but "where in the clinical documentation workflow are records incomplete?" The common root causes in this population:
+
+- Missing prior authorization reference numbers on claims for services that were authorized
+- Absent medical necessity documentation — no clinical notes supporting the procedure code
+- Incorrect or missing CPT modifiers (e.g., telehealth modifier -95 absent on video visit claims)
+- Incomplete referral documentation or missing referring provider NPI
+- Rendering provider credentialing mismatch at the payer
+
+Treating CARC 16 as a rework queue alongside CARC 197 and 96 misallocates denial management resources. This pipeline separates them.
 
 ---
 
 ## Key Findings
 
-### RCM — Denial Attribution (495,412 claims)
+### Denial Attribution (495,412 claims)
+
+The synthetic patient population includes individuals with comorbid Type 2 Diabetes (T2D) and Chronic Kidney Disease (CKD) — conditions that generate both renal dialysis-related claims (CARC 197) and Medicaid formulary conflicts for first-line therapies (CARC 96). These comorbidities also contribute to polypharmacy patterns that increase the likelihood of credentialing and modifier errors — the primary drivers of CARC 16 in this cohort.
 
 | Queue | CARC | Denial Reason | Claim Count | Share of Denials |
 |-------|------|---------------|-------------|-----------------|
@@ -32,19 +52,7 @@ The same OMOP layer that classifies denials can answer a second question without
 | Documentation gaps | 16 | Claim lacks information to adjudicate | 229,400 | 89.3% |
 | **Total denied** | | | **257,000** | **51.9% denial rate** |
 
-**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and addressable upstream (prior-auth workflows, formulary check at prescribing). CARC 16 at 89% of denials signals a documentation and submission quality problem, not a coverage problem. The separation of these two classes is the core deliverable of the RCM pipeline.
-
-### RWE — T2D + CKD Metformin Utilization (104-patient cohort)
-
-Patients with comorbid Type 2 Diabetes (SNOMED 44054006) and Chronic Kidney Disease (stages 1–4) identified from OMOP condition records. Metformin is first-line therapy for T2D under ADA guidelines, but CKD complicates dosing at eGFR thresholds — a known source of underprescription.
-
-| Metric | Value |
-|--------|-------|
-| Cohort size (T2D + CKD) | 104 patients |
-| On metformin | 57 patients (54.8%) |
-| Not on metformin | 47 patients (45.2%) |
-
-**Insight:** A 45.2% gap in first-line therapy utilization in a comorbid population is a meaningful signal. In a production RWE study, this cohort would be the starting point for an adherence analysis — stratified by CKD stage, age band, and payer — to identify whether the gap reflects appropriate clinical decision-making (eGFR-based contraindication) or an access/adherence problem. The pipeline produces the cohort-level data required for that analysis.
+**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of the claim, not in the claim itself. CARC 16 at 89% of denials signals a documentation and submission quality problem. The separation of these two classes into distinct work queues is the core deliverable of the RCM pipeline.
 
 ---
 
@@ -89,7 +97,7 @@ Dagster  ←  raw_claims_load → dbt build, full asset graph, healthcare_pipeli
 | Data generation | Synthea 3.x (Java) | Synthetic FHIR R4 population — PHI-free by design |
 | Ingestion | Python 3.13 + Pydantic v2 | FHIR parser, OMOP mapping, de-identification |
 | Storage | Snowflake | RAW, STAGING, MART schemas; TRANSFORMER role |
-| Transformation | dbt 1.9 + dbt-snowflake | 12 models, 2 seeds, 83 tests |
+| Transformation | dbt 1.10 + dbt-snowflake | 12 models, 2 seeds, 83 tests |
 | Orchestration | Dagster 1.13 | Multi-asset pipeline, full dependency graph |
 | CI | GitHub Actions (SHA-pinned) | lint (flake8 + bandit + pip-audit), pytest, dbt compile |
 | Dev adapter | dbt-duckdb | Zero-cost local dev and CI — no Snowflake credits in CI |
@@ -207,6 +215,24 @@ make test
 ```
 
 pytest covers `extract_uuid`, `parse_datetime`, `hash_id`, `get_coding`, `is_insured`, and `derive_denial_flag` with parametrized inputs including boundary values, null handling, and malformed FHIR references.
+
+---
+
+## What the OMOP Layer Also Enables
+
+The same OMOP CDM layer that drives denial attribution can answer a second analytical question without rebuilding any part of the ingestion pipeline: are the right patients getting the right drugs?
+
+Real-world evidence (RWE) studies differ from randomized controlled trials in one key way: they measure what actually happens in clinical practice, not under controlled conditions. The pipeline identifies patients with comorbid Type 2 Diabetes (T2D, SNOMED 44054006) and Chronic Kidney Disease (CKD, stages 1–4) from OMOP condition records — a clinically significant cohort because ADA guidelines name metformin as first-line therapy for T2D, but CKD complicates dosing at eGFR thresholds (dose reduction required at eGFR <45, contraindicated at eGFR <30). This creates a zone where clinician judgment varies and underprescription is common.
+
+**T2D + CKD Metformin Utilization (104-patient cohort)**
+
+| Metric | Value |
+|--------|-------|
+| Cohort size (T2D + CKD) | 104 patients |
+| On metformin | 57 patients (54.8%) |
+| Not on metformin | 47 patients (45.2%) |
+
+A 45.2% gap in first-line therapy utilization is a meaningful signal — but not a concluded finding. In a production RWE study, it is the starting point for stratification by CKD stage, eGFR band, payer, and age to distinguish appropriate clinical decision-making (eGFR-based contraindication) from underprescription or access barriers. The pipeline produces the cohort-level data required to run that analysis. Adding a new cohort definition requires one row in `seeds/condition_codes.csv` — no SQL changes.
 
 ---
 

@@ -12,26 +12,37 @@ models:
           - not_null
           - unique
       - name: patient_id
+        description: "FK to dim_patient.person_id"
         tests:
           - not_null
       - name: payer_name
+        description: "Insurance payer from stg_payer_plan_period"
         tests:
           - not_null
+      - name: claim_type
+        description: "Claim category from stg_claim_header — pharmacy, institutional, or professional"
+        tests:
+          - not_null
+      - name: submitted_amount
+        description: "Dollar amount billed to payer for this claim"
+        tests:
+          - not_null
+      - name: claim_date
+        description: "Date of service from stg_claim_header"
       - name: carc_code
         description: "Claim Adjustment Reason Code — 197 (telehealth prior-auth gap), 96 (Medicaid pharmacy formulary), 16 (documentation gap/other)"
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['197', '96', '16']
+              values: ['197', '96', '16']
       - name: denial_type
         description: "systematic = payer/procedure pattern; random = catch-all"
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['systematic', 'random']
+              values: ['systematic', 'random']
       - name: denied_amount
+        description: "Dollar amount denied on this claim"
         tests:
           - not_null
 
@@ -39,19 +50,22 @@ models:
     description: "One row per patient with age bands and demographics"
     columns:
       - name: person_id
+        description: "Primary key — one row per patient"
         tests:
           - not_null
           - unique
       - name: birth_year
+        description: "Year of birth from stg_person — day-level precision stripped for de-identification"
         tests:
           - not_null
       - name: age_group
+        description: "Age band derived from birth_year — 0-17, 18-34, 35-49, 50-64, 65+"
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['0-17', '18-34', '35-49', '50-64', '65+']
+              values: ['0-17', '18-34', '35-49', '50-64', '65+']
       - name: gender
+        description: "Gender — M, F, or U from stg_person"
         tests:
           - not_null
 
@@ -59,13 +73,16 @@ models:
     description: "Date spine 2020-01-01 through 2029-12-31"
     columns:
       - name: date_day
+        description: "Primary key — one row per calendar date"
         tests:
           - not_null
           - unique
       - name: year
+        description: "Calendar year extracted from date_day"
         tests:
           - not_null
       - name: is_weekend
+        description: "True if date_day falls on Saturday or Sunday"
         tests:
           - not_null
 
@@ -73,6 +90,7 @@ models:
     description: "Distinct providers from visit_occurrence"
     columns:
       - name: provider_id
+        description: "Primary key — distinct provider identifier from stg_visit_occurrence"
         tests:
           - not_null
           - unique
@@ -81,15 +99,19 @@ models:
     description: "T2D + CKD comorbidity cohort with metformin flag — one row per patient"
     columns:
       - name: person_id
+        description: "Primary key — one row per patient in the T2D+CKD cohort"
         tests:
           - not_null
           - unique
       - name: on_metformin
+        description: "True if patient has active metformin prescription in stg_drug_exposure"
         tests:
           - not_null
       - name: age_group
+        description: "Age band — matches dim_patient.age_group values"
         tests:
           - not_null
       - name: gender
+        description: "Gender — M, F, or U from stg_person via dim_patient"
         tests:
           - not_null
