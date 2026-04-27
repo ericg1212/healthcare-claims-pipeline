@@ -7,19 +7,19 @@
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square&logo=dagster&logoColor=white)
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
 
-A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claims data, maps it to OMOP CDM, and classifies every denied claim by root cause. The output is two distinct work queues — systematic denials with a defined upstream fix, and documentation quality failures that require a different intervention entirely — because treating them the same is where denial management budgets get wasted.
+A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claims data, maps it to OMOP CDM, and classifies every denied claim by root cause — producing two distinct work queues: systematic denials with a defined upstream fix, and documentation failures that call for a fundamentally different type of intervention.
 
 ---
 
 ## Submission Error or Process Failure?
 
-Every healthcare organization tracks its denial rate. Very few can answer the question that actually determines what to do about it: are these denials *fixable*?
+Tracking a denial rate is standard practice. Knowing which denials are worth acting on is less common — and that distinction shapes every decision downstream.
 
-At a **51.9% denial rate** across 495,412 claims, the financial exposure is immediate and compounding. Industry benchmarks put the average cost to rework a single denied claim at $25–118 — before accounting for the claims that get reworked, denied again, and eventually written off. The deeper problem is not the rate itself. It is that 257,000 denials are not one problem. They are two fundamentally different problems being managed as one, and that category error is where denial management budgets silently disappear.
+At a **51.9% denial rate** across 495,412 claims, the $25–118 cost to rework a single denied claim compounds quickly. The more consequential issue is that those 257,000 denials aren't one problem — they're two fundamentally different problems, and treating them the same is where denial management budgets quietly disappear.
 
-**Systematic denials are predictable.** CARC 197 fires every time a renal dialysis or telehealth claim reaches the payer without a prior authorization reference number. CARC 96 fires every time a Medicaid formulary conflict — detectable at the prescribing decision — gets caught at adjudication instead. Same error pattern, same CARC code, every time. These are not coverage denials. The services are covered. The submissions were wrong. Fix the workflow once, stop the denial permanently.
+**Systematic denials follow a pattern.** CARC 197 fires every time a renal dialysis or telehealth claim arrives without a prior authorization reference number. CARC 96 fires every time a Medicaid formulary conflict — catchable at prescribing — reaches adjudication instead. Same trigger, same code, every time. The services are covered; the submissions were incomplete. Fix the workflow once, stop the denial.
 
-**Random denials are a different class of problem.** CARC 16 — "claim lacks information to adjudicate" — accounts for 89.3% of denials in this cohort and tells you almost nothing about why. It is a catch-all adjudication code covering five distinct failure modes across documentation, coding, and credentialing. Sending CARC 16 claims to a rework queue is not a strategy. It is a triage operation on a systemic documentation failure — expensive, labor-intensive, and unlikely to change the underlying rate.
+**Documentation failures are a different kind of problem.** CARC 16 — "claim lacks information to adjudicate" — covers 89.3% of denials and spans five distinct failure modes across documentation, coding, and credentialing. Reworking these claims one by one treats the symptom rather than the source; the root cause sits in the clinical workflow, not in the submission.
 
 **The classification matters because the remediation path is fundamentally different:**
 
@@ -29,9 +29,9 @@ At a **51.9% denial rate** across 495,412 claims, the financial exposure is imme
 | 96 | Systematic | Drug not on Medicaid formulary — first-line therapies flagged post-prescribing when the conflict could have been detected at the point of care | Move the formulary check upstream to prescribing; a conflict identified at adjudication is too late to prevent the denial |
 | 16 | Random | Claim lacks information to adjudicate — a catch-all code covering documentation gaps, coding errors, and credentialing failures across the clinical and billing workflow | Submission quality audit to identify the dominant subtype; root-cause-specific checklists at encounter close, not a blanket rework queue |
 
-**CARC 197 and 96 have a defined fix point.** Prior-auth workflow enforcement at claim submission for 197. Formulary conflict detection moved upstream to the prescribing decision for 96. These are not coverage denials — the services are covered, the submissions were wrong. Both have a single, addressable intervention upstream of submission. Together they represent ~27,600 denials with a deterministic root cause and a measurable ROI case for remediation.
+**CARC 197 and 96 each have a single, addressable fix point.** Prior-auth workflow check at submission for 197; formulary conflict detection moved to the prescribing decision for 96. Together ~27,600 denials with a deterministic root cause and a clear ROI case for remediation.
 
-**CARC 16 requires an audit, not a rework queue.** At 89.3% of denials, the operational question is not "can we recover these claims?" It is "which documentation failure is dominant in this population, and where in the clinical workflow does it originate?" The five root causes identified in this cohort — and the point of intervention for each:
+**CARC 16 calls for an audit rather than a rework queue.** At 89.3% of denials, the useful question shifts from "can we recover these?" to "which documentation failure is most prevalent, and where in the workflow does it originate?" The five root causes in this cohort, and where to intervene:
 
 | Root Cause | Mitigation |
 |------------|------------|
@@ -41,7 +41,7 @@ At a **51.9% denial rate** across 495,412 claims, the financial exposure is imme
 | Incomplete referral documentation or missing referring provider NPI | Require referral ID as a mandatory field in the visit record; link referral tracking to appointment scheduling so the record is complete before the encounter |
 | Rendering provider credentialing mismatch at the payer | Real-time credentialing status check against payer rosters at time of claim; automated re-credentialing alerts at 90/60/30 days before expiration |
 
-**This pipeline produces two outputs:** a systematic queue (~27,600 claims with an upstream fix) and a documentation quality queue (229,400 claims requiring process-level intervention). The separation is the deliverable. Without it, every denial looks like a rework opportunity — and 89% of the effort goes toward claims that process fixes alone cannot recover.
+**The pipeline surfaces two work queues:** ~27,600 systematic claims each with a defined upstream fix, and 229,400 documentation failures requiring process-level intervention. That separation is the deliverable — without it, every denial looks like a rework candidate, and 89% of the effort lands where it can't move the rate.
 
 ---
 
@@ -106,6 +106,34 @@ dbt MART (5 tables)
         ▼
 Dagster  ←  raw_claims_load → dbt build, full asset graph, healthcare_pipeline job
 ```
+
+---
+
+## Data Model
+
+### Staging layer (views — always fresh, zero storage)
+
+Seven OMOP CDM staging views clean and type-coerce the RAW tables. The denial flag is derived at this layer: a claim is denied when `is_insured = true AND submitted_amount > 0 AND payment_amount = 0`. `NO_INSURANCE` (Synthea self-pay) is explicitly excluded — a zero payment on an uninsured claim is patient responsibility, not a payer denial.
+
+### Mart layer (tables — pre-computed for BI queries)
+
+`fct_denials` applies CARC attribution from `seeds/denial_rules.csv` — adding a new denial rule requires one CSV row, no SQL changes. `fct_rwe_cohort` identifies the T2D+CKD cohort by joining `seeds/condition_codes.csv` against OMOP condition records — adding a new cohort definition requires adding rows to the seed, not editing model SQL. Both seeds externalize clinical knowledge from transformation logic.
+
+### dbt tests
+
+83 tests across 12 models: `not_null`, `unique`, `accepted_values`, `relationships`. Every primary key, every foreign key, every categorical field is tested. The `accepted_values` test on `carc_code` (`'197'`, `'96'`, `'16'`) and `denial_type` (`'systematic'`, `'random'`) ensures CARC attribution logic never silently produces invalid output.
+
+---
+
+## Testing
+
+```bash
+make test
+# pytest: 40 tests — parser utilities, edge cases, denial flag derivation
+# dbt compile: validates all 12 models + 2 seeds resolve without errors
+```
+
+pytest covers `extract_uuid`, `parse_datetime`, `hash_id`, `get_coding`, `is_insured`, and `derive_denial_flag` with parametrized inputs including boundary values, null handling, and malformed FHIR references.
 
 ---
 
@@ -191,34 +219,6 @@ make dagster
 make dbt-dev    # runs dbt against local DuckDB
 make test       # pytest + dbt compile
 ```
-
----
-
-## Data Model
-
-### Staging layer (views — always fresh, zero storage)
-
-Seven OMOP CDM staging views clean and type-coerce the RAW tables. The denial flag is derived at this layer: a claim is denied when `is_insured = true AND submitted_amount > 0 AND payment_amount = 0`. `NO_INSURANCE` (Synthea self-pay) is explicitly excluded — a zero payment on an uninsured claim is patient responsibility, not a payer denial.
-
-### Mart layer (tables — pre-computed for BI queries)
-
-`fct_denials` applies CARC attribution from `seeds/denial_rules.csv` — adding a new denial rule requires one CSV row, no SQL changes. `fct_rwe_cohort` identifies the T2D+CKD cohort by joining `seeds/condition_codes.csv` against OMOP condition records — adding a new cohort definition requires adding rows to the seed, not editing model SQL. Both seeds externalize clinical knowledge from transformation logic.
-
-### dbt tests
-
-83 tests across 12 models: `not_null`, `unique`, `accepted_values`, `relationships`. Every primary key, every foreign key, every categorical field is tested. The `accepted_values` test on `carc_code` (`'197'`, `'96'`, `'16'`) and `denial_type` (`'systematic'`, `'random'`) ensures CARC attribution logic never silently produces invalid output.
-
----
-
-## Testing
-
-```bash
-make test
-# pytest: 40 tests — parser utilities, edge cases, denial flag derivation
-# dbt compile: validates all 12 models + 2 seeds resolve without errors
-```
-
-pytest covers `extract_uuid`, `parse_datetime`, `hash_id`, `get_coding`, `is_insured`, and `derive_denial_flag` with parametrized inputs including boundary values, null handling, and malformed FHIR references.
 
 ---
 
