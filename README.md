@@ -11,7 +11,7 @@ A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claim
 
 ---
 
-## Systematic or Random?
+## Submission Error or Process Failure?
 
 Every healthcare organization tracks its denial rate. Very few can answer the question that actually determines what to do about it: are these denials *fixable*?
 
