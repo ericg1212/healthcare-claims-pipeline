@@ -7,11 +7,11 @@
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square&logo=dagster&logoColor=white)
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
 
-A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claims data, maps it to OMOP CDM, and classifies every denied claim by root cause — producing two distinct work queues: systematic denials with a defined upstream fix, and documentation failures that call for a fundamentally different type of intervention.
+Not every denied claim is a rework opportunity. This pipeline classifies 257K denied claims by root cause — separating systematic denials with a defined upstream fix from documentation failures where the problem isn't in the claim at all.
 
 ---
 
-## Submission Error or Process Failure?
+## Fix the Submission, or Fix the Workflow?
 
 Tracking a denial rate is standard practice. Knowing which denials are worth acting on is less common — and that distinction shapes every decision downstream.
 
@@ -47,7 +47,7 @@ At a **51.9% denial rate** across 495,412 claims, the $25–118 cost to rework a
 
 ## Findings: 495,412 Claims, 51.9% Denial Rate
 
-These denial patterns reflect the population's clinical mix — renal dialysis and Medicaid formulary conflicts in a complex comorbid patient population drive CARC 197 and 96; CARC 16 is a submission quality failure independent of diagnosis.
+Three CARC codes, two root cause classes — systematic denials trace to prior-auth and formulary gaps; CARC 16 at 89.3% is a documentation quality signal, independent of diagnosis.
 
 | Queue | CARC | Denial Reason | Claim Count | Share of Denials |
 |-------|------|---------------|-------------|-----------------|
@@ -222,7 +222,7 @@ make test       # pytest + dbt compile
 
 ---
 
-## What the OMOP Layer Also Enables
+## Same Data, Second Question
 
 The same OMOP CDM layer that drives denial attribution can answer a second analytical question without rebuilding any part of the ingestion pipeline: are the right patients getting the right drugs?
 
