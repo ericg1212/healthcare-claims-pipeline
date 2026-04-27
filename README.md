@@ -7,43 +7,43 @@
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square&logo=dagster&logoColor=white)
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
 
-A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claims data, maps it to OMOP CDM, and attributes denials to their root cause — separating fixable systematic claims from unfixable documentation gaps. That separation is the core analytical deliverable for any revenue cycle remediation effort.
+A production-grade healthcare data pipeline that ingests synthetic FHIR R4 claims data, maps it to OMOP CDM, and classifies every denied claim by root cause. The output is two distinct work queues — systematic denials with a defined upstream fix, and documentation quality failures that require a different intervention entirely — because treating them the same is where denial management budgets get wasted.
 
 ---
 
 ## Systematic or Random?
 
-Healthcare organizations report a denial rate. What they rarely know is *why* — and whether the denials are worth chasing.
+Healthcare organizations report a denial rate. What they rarely know is *why* — and more importantly, which denials are worth the cost of chasing.
 
-At a **51.9% denial rate** across 495,412 claims, the revenue impact is immediate. Every systematic denial is a claim that should have been paid and can still be stopped upstream — before it ever reaches the payer. Every CARC 16 is a documentation quality failure. Most cannot be recovered by reworking the claim alone; the root cause is in the clinical workflow, not the submission.
+At a **51.9% denial rate** across 495,412 claims, the financial exposure is substantial. Industry benchmarks put the average cost to rework a single denied claim at $25–118. Applied to 257,000 denials, the question is not whether to act — it is where to allocate the effort. Systematic denials have a fixed, upstream remediation with measurable ROI. Documentation failures are a process problem; reworking them claim-by-claim is a losing strategy.
 
-**The classification matters because the remediation path is different:**
+**The classification matters because the remediation path is fundamentally different:**
 
-| CARC | Type | Driver | Remediation |
-|------|------|--------|-------------|
-| 197 | Systematic | Renal dialysis and telehealth claims submitted without a prior authorization reference number | Prior-auth workflow check at claim submission — verify PA number is present before filing |
-| 96 | Systematic | Drug not on Medicaid formulary — first-line therapies (e.g., metformin for T2D/CKD patients) flagged post-prescribing | Formulary conflict check at the point of prescribing, not at adjudication |
-| 16 | Random | Claim lacks information to adjudicate — multiple root causes across documentation, coding, and credentialing | Submission quality audit; documentation checklists at encounter close |
+| CARC | Type | Root Cause | Remediation |
+|------|------|------------|-------------|
+| 197 | Systematic | Renal dialysis and telehealth claims submitted without a prior authorization reference number — the service is covered, the submission is incomplete | Enforce PA reference number as a required field before claim submission; block filing if absent for PA-required procedure codes |
+| 96 | Systematic | Drug not on Medicaid formulary — first-line therapies flagged post-prescribing when the conflict could have been detected at the point of care | Move the formulary check upstream to prescribing; a conflict identified at adjudication is too late to prevent the denial |
+| 16 | Random | Claim lacks information to adjudicate — a catch-all code covering documentation gaps, coding errors, and credentialing failures across the clinical and billing workflow | Submission quality audit to identify the dominant subtype; root-cause-specific checklists at encounter close, not a blanket rework queue |
 
-**CARC 197 and 96 are process failures, not coverage failures.** The services are covered. The fix belongs upstream of submission: prior-auth workflow enforcement for 197, formulary check at prescribing for 96. ~27,600 systematic denials with a deterministic remediation path and measurable ROI.
+**CARC 197 and 96 are process failures, not coverage failures.** The services are covered. The denials exist because the right information was not attached to the claim at the right time. Both have a single, addressable fix point upstream of submission — prior-auth workflow enforcement for 197, formulary check at prescribing for 96. Together they represent ~27,600 denials with a deterministic remediation path.
 
-**CARC 16 is a different problem entirely.** At 89.3% of denials, the business question is not "can we recover these?" but "where in the clinical documentation workflow are records incomplete?" The common root causes in this population:
+**CARC 16 is a different problem at a different scale.** At 89.3% of denials, it cannot be addressed as a rework queue. The operational question is: which documentation failure is dominant in this population, and where in the clinical workflow does it originate? The five root causes identified in this cohort, and their mitigation paths:
 
-- Missing prior authorization reference numbers on claims for services that were authorized
-- Absent medical necessity documentation — no clinical notes supporting the procedure code
-- Incorrect or missing CPT modifiers (e.g., telehealth modifier -95 absent on video visit claims)
-- Incomplete referral documentation or missing referring provider NPI
-- Rendering provider credentialing mismatch at the payer
+| Root Cause | Mitigation |
+|------------|------------|
+| Missing prior authorization reference number on claims for services that *were* authorized | PA reference validation at claim creation; block submission if PA number is absent for codes that require prior auth |
+| Absent medical necessity documentation — no clinical notes attached to support the procedure code | Enforce documentation completeness at encounter close; prevent billing until the relevant clinical note is finalized in the EHR |
+| Missing or incorrect CPT modifiers — e.g., telehealth modifier -95 absent on video visit claims | Automated modifier scrubbing against payer-specific rules at claim creation; flag -95 requirement for all telehealth service codes |
+| Incomplete referral documentation or missing referring provider NPI | Require referral ID as a mandatory field in the visit record; link referral tracking to appointment scheduling so the record is complete before the encounter |
+| Rendering provider credentialing mismatch at the payer | Real-time credentialing status check against payer rosters at time of claim; automated re-credentialing alerts at 90/60/30 days before expiration |
 
-Treating CARC 16 as a rework queue alongside CARC 197 and 96 misallocates denial management resources. This pipeline separates them.
+**This pipeline produces two outputs:** a systematic queue (~27,600 claims, each with a specific upstream fix) and a documentation quality queue (229,400 claims requiring process intervention at the clinical workflow level). Knowing which queue a denial belongs to is prerequisite to any effective remediation strategy.
 
 ---
 
-## Key Findings
+## Findings: 495,412 Claims, 51.9% Denial Rate
 
-### Denial Attribution (495,412 claims)
-
-The synthetic patient population includes individuals with comorbid Type 2 Diabetes (T2D) and Chronic Kidney Disease (CKD) — conditions that generate both renal dialysis-related claims (CARC 197) and Medicaid formulary conflicts for first-line therapies (CARC 96). These comorbidities also contribute to polypharmacy patterns that increase the likelihood of credentialing and modifier errors — the primary drivers of CARC 16 in this cohort.
+These denial patterns reflect the population's clinical mix — renal dialysis and Medicaid formulary conflicts in a complex comorbid patient population drive CARC 197 and 96; CARC 16 is a submission quality failure independent of diagnosis.
 
 | Queue | CARC | Denial Reason | Claim Count | Share of Denials |
 |-------|------|---------------|-------------|-----------------|
@@ -52,7 +52,22 @@ The synthetic patient population includes individuals with comorbid Type 2 Diabe
 | Documentation gaps | 16 | Claim lacks information to adjudicate | 229,400 | 89.3% |
 | **Total denied** | | | **257,000** | **51.9% denial rate** |
 
-**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of the claim, not in the claim itself. CARC 16 at 89% of denials signals a documentation and submission quality problem. The separation of these two classes into distinct work queues is the core deliverable of the RCM pipeline.
+**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level.
+
+---
+
+## Stack
+
+| Layer | Technology | Role |
+|-------|-----------|------|
+| Data generation | Synthea 3.x (Java) | Synthetic FHIR R4 population — PHI-free by design |
+| Ingestion | Python 3.13 + Pydantic v2 | FHIR parser, OMOP mapping, de-identification |
+| Storage | Snowflake | RAW, STAGING, MART schemas; TRANSFORMER role |
+| Transformation | dbt 1.10 + dbt-snowflake | 12 models, 2 seeds, 83 tests |
+| Orchestration | Dagster 1.13 | Multi-asset pipeline, full dependency graph |
+| CI | GitHub Actions (SHA-pinned) | lint (flake8 + bandit + pip-audit), pytest, dbt compile |
+| Dev adapter | dbt-duckdb | Zero-cost local dev and CI — no Snowflake credits in CI |
+| Security | TRANSFORMER role, SECURITY.md, Dependabot | Least-privilege, supply chain protection |
 
 ---
 
@@ -87,21 +102,6 @@ dbt MART (5 tables)
         ▼
 Dagster  ←  raw_claims_load → dbt build, full asset graph, healthcare_pipeline job
 ```
-
----
-
-## Stack
-
-| Layer | Technology | Role |
-|-------|-----------|------|
-| Data generation | Synthea 3.x (Java) | Synthetic FHIR R4 population — PHI-free by design |
-| Ingestion | Python 3.13 + Pydantic v2 | FHIR parser, OMOP mapping, de-identification |
-| Storage | Snowflake | RAW, STAGING, MART schemas; TRANSFORMER role |
-| Transformation | dbt 1.10 + dbt-snowflake | 12 models, 2 seeds, 83 tests |
-| Orchestration | Dagster 1.13 | Multi-asset pipeline, full dependency graph |
-| CI | GitHub Actions (SHA-pinned) | lint (flake8 + bandit + pip-audit), pytest, dbt compile |
-| Dev adapter | dbt-duckdb | Zero-cost local dev and CI — no Snowflake credits in CI |
-| Security | TRANSFORMER role, SECURITY.md, Dependabot | Least-privilege, supply chain protection |
 
 ---
 
