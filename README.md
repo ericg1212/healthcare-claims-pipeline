@@ -6,6 +6,7 @@
 ![dbt](https://img.shields.io/badge/dbt-1.10-FF694B?style=flat-square&logo=dbt&logoColor=white)
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square&logo=dagster&logoColor=white)
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
+![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-orange?style=flat-square)
 
 Not every denied claim is a rework opportunity. This pipeline classifies 257K denied claims by root cause — systematic denials vs. documentation failures — and the remediation path differs fundamentally for each.
 
@@ -62,8 +63,8 @@ Tracking a denial rate is standard practice. Knowing which denials are worth act
 
 | Layer | Technology | Role |
 |-------|-----------|------|
-| Data generation | Synthea 3.x (Java) | Synthetic FHIR R4 population — PHI-free by design |
-| Ingestion | Python 3.13 + Pydantic v2 | FHIR parser, OMOP mapping, de-identification |
+| Data generation | Synthea 3.x (Java) | Synthetic HL7 FHIR R4 population (simulates EHR-originated payloads) — PHI-free by design |
+| Ingestion | Python 3.13 + Pydantic v2 | EHR-originated HL7 FHIR R4 parser, OMOP mapping, de-identification |
 | Storage | Snowflake | RAW, STAGING, MART schemas; TRANSFORMER role |
 | Transformation | dbt 1.10 + dbt-snowflake | 12 models, 2 seeds, 83 tests |
 | Orchestration | Dagster 1.13 | Multi-asset pipeline, full dependency graph |
@@ -76,7 +77,7 @@ Tracking a denial rate is standard practice. Knowing which denials are worth act
 ## Architecture
 
 ```
-Synthea FHIR R4 (2,000-patient synthetic population)
+Synthea HL7 FHIR R4 (2,000-patient synthetic population, simulates EHR-originated bundles)
         │
         ▼
 Python FHIR Parser  ←  6 resource types → OMOP CDM fields
