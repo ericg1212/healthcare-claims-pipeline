@@ -12,6 +12,14 @@ Not every denied claim is a rework opportunity. This pipeline classifies 257K de
 
 ---
 
+## Walkthrough
+
+5-minute end-to-end walkthrough: FHIR ingestion → Snowflake RAW → dbt mart → Dagster job run.
+
+*[Add Loom URL here]*
+
+---
+
 ## Findings: 495,412 Claims, 51.9% Denial Rate
 
 CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each with a single upstream fix. CARC 16 at 89.3% is a documentation quality problem that cuts across all claim types.
@@ -76,35 +84,33 @@ Tracking a denial rate is standard practice. Knowing which denials are worth act
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    A["Synthea HL7 FHIR R4\n2,000-patient population"] --> B["Python FHIR Parser\n6 resource types → OMOP CDM\nPydantic v2 · de-identification"]
+    B --> C[("Snowflake RAW\n7 tables · append-only")]
+    C --> D["dbt STAGING\n7 views · OMOP mapping\ndenial flag derivation"]
+    D --> E["dbt MART\nfct_denials · fct_rwe_cohort\ndim_patient · dim_date · dim_provider"]
+    E --> F["Dagster\nhealthcare_pipeline job\nfull asset dependency graph"]
 ```
-Synthea HL7 FHIR R4 (2,000-patient synthetic population, simulates EHR-originated bundles)
-        │
-        ▼
-Python FHIR Parser  ←  6 resource types → OMOP CDM fields
-  ├── Patient          →  PERSON
-  ├── Encounter        →  VISIT_OCCURRENCE
-  ├── Condition        →  CONDITION_OCCURRENCE (ICD-10 + SNOMED)
-  ├── MedicationRequest → DRUG_EXPOSURE (RxNorm)
-  ├── ExplanationOfBenefit → CLAIM_HEADER + CLAIM_LINE
-  └── Coverage         →  PAYER_PLAN_PERIOD
-        │  pydantic validation + de-identification boundary
-        ▼
-Snowflake RAW schema  (7 tables, append-only)
-        │
-        ▼
-dbt STAGING (7 views)  ←  OMOP CDM mapping, type coercion, denial flag derivation
-        │
-        ▼
-dbt MART (5 tables)
-  ├── fct_denials           ← CARC attribution, systematic vs. random classification
-  ├── fct_rwe_cohort        ← T2D+CKD cohort, metformin flag
-  ├── dim_patient           ← demographics, age bands
-  ├── dim_date              ← date spine 2020–2029
-  └── dim_provider          ← provider reference
-        │
-        ▼
-Dagster  ←  raw_claims_load → dbt build, full asset graph, healthcare_pipeline job
-```
+
+### FHIR Resource Mapping
+
+| FHIR Resource | OMOP CDM Target |
+|---|---|
+| Patient | PERSON |
+| Encounter | VISIT_OCCURRENCE |
+| Condition | CONDITION_OCCURRENCE (ICD-10 + SNOMED) |
+| MedicationRequest | DRUG_EXPOSURE (RxNorm) |
+| ExplanationOfBenefit | CLAIM_HEADER + CLAIM_LINE |
+| Coverage | PAYER_PLAN_PERIOD |
+
+Pydantic v2 validation and de-identification run at the FHIR parser boundary before any data reaches Snowflake.
+
+### Dagster Asset Graph
+
+*Run `make dagster` → localhost:3000 → Assets to view the full dependency graph. Add a screenshot here once captured.*
+
+<!-- TODO: add docs/dagster_asset_graph.png -->
 
 ---
 
