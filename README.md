@@ -36,24 +36,6 @@ CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each w
 
 ---
 
-## Same Data, Second Question
-
-The same OMOP CDM layer that drives denial attribution can answer a second analytical question without rebuilding any part of the ingestion pipeline: are the right patients getting the right drugs?
-
-Real-world evidence (RWE) studies differ from randomized controlled trials in one key way: they measure what actually happens in clinical practice, not under controlled conditions. The pipeline identifies patients with comorbid Type 2 Diabetes (T2D, SNOMED 44054006) and Chronic Kidney Disease (CKD, stages 1–4) from OMOP condition records — a clinically significant cohort because ADA guidelines name metformin as first-line therapy for T2D, but CKD complicates dosing at eGFR thresholds (dose reduction required at eGFR <45, contraindicated at eGFR <30). This creates a zone where clinician judgment varies and underprescription is common.
-
-**T2D + CKD Metformin Utilization (104-patient cohort)**
-
-| Metric | Value |
-|--------|-------|
-| Cohort size (T2D + CKD) | 104 patients |
-| On metformin | 57 patients (54.8%) |
-| Not on metformin | 47 patients (45.2%) |
-
-A 45.2% gap in first-line therapy utilization is a meaningful signal — but not a concluded finding. In a production RWE study, it is the starting point for stratification by CKD stage, eGFR band, payer, and age to distinguish appropriate clinical decision-making (eGFR-based contraindication) from underprescription or access barriers. The pipeline produces the cohort-level data required to run that analysis. Adding a new cohort definition requires one row in `seeds/condition_codes.csv` — no SQL changes.
-
----
-
 ## Fix the Submission, or Fix the Workflow?
 
 Tracking a denial rate is standard practice. Knowing which denials are worth acting on is less common — and that distinction shapes every decision downstream. Those 257,000 denials aren't one problem — they're two fundamentally different problems, and treating them the same is where denial management budgets quietly disappear.
@@ -83,6 +65,24 @@ Tracking a denial rate is standard practice. Knowing which denials are worth act
 | Rendering provider credentialing mismatch at the payer | Real-time credentialing status check against payer rosters at time of claim; automated re-credentialing alerts at 90/60/30 days before expiration |
 
 **The pipeline surfaces two work queues:** ~27,600 systematic claims each with a defined upstream fix, and 229,400 documentation failures requiring process-level intervention. That separation is the deliverable — without it, every denial looks like a rework candidate, and 89% of the effort lands where it can't move the rate.
+
+---
+
+## Same Data, Second Question
+
+The same OMOP CDM layer that drives denial attribution can answer a second analytical question without rebuilding any part of the ingestion pipeline: are the right patients getting the right drugs?
+
+Real-world evidence (RWE) studies differ from randomized controlled trials in one key way: they measure what actually happens in clinical practice, not under controlled conditions. The pipeline identifies patients with comorbid Type 2 Diabetes (T2D, SNOMED 44054006) and Chronic Kidney Disease (CKD, stages 1–4) from OMOP condition records — a clinically significant cohort because ADA guidelines name metformin as first-line therapy for T2D, but CKD complicates dosing at eGFR thresholds (dose reduction required at eGFR <45, contraindicated at eGFR <30). This creates a zone where clinician judgment varies and underprescription is common.
+
+**T2D + CKD Metformin Utilization (104-patient cohort)**
+
+| Metric | Value |
+|--------|-------|
+| Cohort size (T2D + CKD) | 104 patients |
+| On metformin | 57 patients (54.8%) |
+| Not on metformin | 47 patients (45.2%) |
+
+A 45.2% gap in first-line therapy utilization is a meaningful signal — but not a concluded finding. In a production RWE study, it is the starting point for stratification by CKD stage, eGFR band, payer, and age to distinguish appropriate clinical decision-making (eGFR-based contraindication) from underprescription or access barriers. The pipeline produces the cohort-level data required to run that analysis. Adding a new cohort definition requires one row in `seeds/condition_codes.csv` — no SQL changes.
 
 ---
 
