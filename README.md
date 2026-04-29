@@ -13,13 +13,6 @@ Not every denied claim is a rework opportunity. This pipeline delivers two outpu
 
 ---
 
-## Walkthrough
-
-5-minute end-to-end walkthrough: FHIR ingestion → Snowflake RAW → dbt mart → Dagster job run.
-
-*[Add Loom URL here]*
-
----
 
 ## Findings: 495,412 Claims, 51.9% Denial Rate
 
