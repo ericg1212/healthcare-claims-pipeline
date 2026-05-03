@@ -33,7 +33,7 @@ jobs:
           dbt deps
           dbt docs generate --profiles-dir profiles
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dbt_project/target
       - name: Deploy to GitHub Pages
