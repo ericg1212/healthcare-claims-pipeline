@@ -4,7 +4,7 @@ dagster-dbt==0.29.2
 dagster-webserver==1.13.2
 
 # ── dbt ──────────────────────────────────────────────────────────
-dbt-core==1.10.20             # 1.10.x LTS; within dagster-dbt range
+dbt-core==1.11.8             # 1.10.x LTS; within dagster-dbt range
 dbt-snowflake==1.10.7         # accepts snowflake-connector-python 4.x
 dbt-duckdb==1.10.1            # CI adapter — no Snowflake credits in CI
 
