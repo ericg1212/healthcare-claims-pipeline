@@ -90,7 +90,7 @@ A 45.2% gap in first-line therapy utilization is a meaningful signal — but not
 | Orchestration | Dagster 1.13 | Multi-asset pipeline, full dependency graph |
 | CI | GitHub Actions (SHA-pinned) | lint (flake8 + bandit + pip-audit), pytest, dbt compile |
 | Dev adapter | dbt-duckdb | Zero-cost local dev and CI — no Snowflake credits in CI |
-| Security | TRANSFORMER role, SECURITY.md, Dependabot | Least-privilege, supply chain protection |
+| Security | TRANSFORMER role, SECURITY.md, Dependabot, secret scanning | Least-privilege, supply chain and credential protection |
 
 ---
 
