@@ -14,7 +14,7 @@ snowflake-sqlalchemy>=1.9.0   # Snowflake bulk load
 snowflake-connector-python>=4.4.0
 
 # ── Data utilities ───────────────────────────────────────────────
-pandas==2.2.3
+pandas==3.0.2
 pyarrow==24.0.0
 
 # ── Testing ──────────────────────────────────────────────────────
