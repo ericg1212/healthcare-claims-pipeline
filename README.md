@@ -120,9 +120,7 @@ Pydantic v2 validation and de-identification run at the FHIR parser boundary bef
 
 ### Dagster Asset Graph
 
-*Run `make dagster` → localhost:3000 → Assets to view the full dependency graph. Add a screenshot here once captured.*
-
-<!-- TODO: add docs/dagster_asset_graph.png -->
+![Dagster Asset Graph](docs/dagster_asset_graph.png)
 
 ---
 
