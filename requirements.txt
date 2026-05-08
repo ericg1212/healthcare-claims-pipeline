@@ -1,5 +1,5 @@
 # ── Core orchestration ───────────────────────────────────────────
-dagster==1.13.2
+dagster==1.13.4
 dagster-dbt==0.29.2
 dagster-webserver==1.13.2
 
