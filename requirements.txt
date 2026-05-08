@@ -1,7 +1,7 @@
 # ── Core orchestration ───────────────────────────────────────────
 dagster==1.13.2
 dagster-dbt==0.29.2
-dagster-webserver==1.13.2
+dagster-webserver==1.13.4
 
 # ── dbt ──────────────────────────────────────────────────────────
 dbt-core==1.11.8             # 1.10.x LTS; within dagster-dbt range
