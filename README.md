@@ -1,15 +1,35 @@
 # Denied: Healthcare Claims Intelligence Pipeline
 
+<div align="center">
+
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://ericg1212.github.io/healthcare-claims-pipeline/)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=flat-square&logo=snowflake&logoColor=white)
 ![dbt](https://img.shields.io/badge/dbt-1.10-FF694B?style=flat-square&logo=dbt&logoColor=white)
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square&logo=dagster&logoColor=white)
-![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
-![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-orange?style=flat-square)
+![HIPAA](https://img.shields.io/badge/HIPAA-compliant%20pattern-lightgrey?style=flat-square)
+![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-E8670A?style=flat-square)
 
-**Author:** Eric Grynspan · [LinkedIn](https://www.linkedin.com/in/ericgrynspan/) · [GitHub](https://github.com/ericg1212)
+<br/>
+
+![Claims](https://img.shields.io/badge/Claims-495K-0ea5e9?style=flat-square)
+![Denial Rate](https://img.shields.io/badge/Denial%20Rate-51.9%25-ef4444?style=flat-square)
+![Recoverable](https://img.shields.io/badge/Recoverable-%241.2M%2B-22c55e?style=flat-square)
+![dbt Tests](https://img.shields.io/badge/dbt%20Tests-83-FF694B?style=flat-square&logo=dbt&logoColor=white)
+![pytest](https://img.shields.io/badge/pytest-40-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
+
+<br/>
+
+**By [Eric Grynspan](https://www.linkedin.com/in/ericgrynspan/)** &nbsp;·&nbsp; [Portfolio](https://ericg1212.github.io) &nbsp;·&nbsp; [dbt Docs](https://ericg1212.github.io/healthcare-claims-pipeline/)
+
+</div>
+
+---
+
+> **Portfolio arc:** [P2 — Denied *(this project)*](https://github.com/ericg1212/healthcare-claims-pipeline) &nbsp;→&nbsp; [P3 — Trust but Verify](https://github.com/ericg1212/ai-healthcare-pipeline) &nbsp;→&nbsp; P4 — Cleared *(real-time denial prevention, planned)*
+
+---
 
 **Denied.** Not every denied claim is a rework opportunity — and not all denials are the same problem. This pipeline delivers two outputs from one infrastructure: CARC-level denial attribution across 257K claims that separates systematic denials from documentation failures (RCM), and a T2D+CKD metformin utilization cohort that connects the same claims data to clinical drug utilization signals (RWE).
 
