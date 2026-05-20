@@ -25,4 +25,4 @@ pytest-cov==6.1.0
 flake8==7.2.0
 bandit==1.9.4
 pip-audit==2.10.0
-pyjwt<2.12.0                  # pin below PYSEC-2025-183 (no fix released); transitive via dagster/snowflake
+# pyjwt: PYSEC-2025-183 has no fix; suppressed via --ignore-vuln in ci.yml
