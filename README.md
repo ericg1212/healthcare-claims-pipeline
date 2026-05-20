@@ -1,4 +1,4 @@
-# Denied: Healthcare Claims Intelligence Pipeline
+# Healthcare Claims Intelligence Pipeline
 
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://ericg1212.github.io/healthcare-claims-pipeline/)
@@ -11,10 +11,12 @@
 
 Not every denied claim is a rework opportunity. This pipeline delivers two outputs from one infrastructure: CARC-level denial attribution across 257K claims that separates systematic denials from documentation failures (RCM), and a T2D+CKD metformin utilization cohort that connects the same claims data to clinical drug utilization signals (RWE).
 
+CMS-0057-F mandates that payers respond to prior authorization requests within 72 hours for urgent cases and 7 days for standard — creating immediate downstream pressure on providers to submit complete, well-documented claims or face accelerating denial rates. CARC 197 (prior-auth gaps) is exactly the category this regulation targets.
+
 ---
 
 
-## Findings: 495,412 Claims, 51.9% Denial Rate
+## Findings: 495,412 Claims, 51.9% Denial Rate, $1.2M+ Recoverable
 
 CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each with a single upstream fix. CARC 16 at 89.3% is a documentation quality problem that cuts across all claim types.
 
@@ -25,7 +27,7 @@ CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each w
 | Documentation gaps | 16 | Claim lacks information to adjudicate | 229,400 | 89.3% |
 | **Total denied** | | | **257,000** | **51.9% denial rate** |
 
-**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level.
+**Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level. At average reimbursement rates, the recoverable systematic denial pool represents **$1.2M+ in reclaimable revenue** — the portion with a defined upstream fix and a clear ROI case for intervention.
 
 ---
 
@@ -183,6 +185,37 @@ healthcare-claims-pipeline/
 │   └── dependabot.yml       # Weekly pip + actions dependency alerts
 └── Makefile                 # generate, load-snowflake, dbt-snowflake, dagster, test
 ```
+
+---
+
+## Design Decisions
+
+**Why OMOP CDM?**
+OMOP is the standard observational data model used by FDA, NIH, and the OHDSI network — it enables cross-study comparisons and makes the RWE cohort methodology reproducible against any OMOP-compliant dataset. Using a proprietary schema would produce the same numbers but prevent any external validation.
+
+**Why externalize CARC attribution to a seed file?**
+Clinical knowledge shouldn't live in SQL. `seeds/denial_rules.csv` maps procedure codes and payer combinations to CARC codes — adding a new denial rule is a one-row CSV change, no model SQL edits. The same principle applies to the RWE cohort: adding a new condition group is a seed row, not a model rewrite. This separation makes the pipeline maintainable without a data engineer for every rule change.
+
+**Why DuckDB for dev and CI?**
+Snowflake credits don't belong in a CI pipeline. dbt's DuckDB adapter runs the same SQL dialect locally and in GitHub Actions — zero cost, identical logic validation. Snowflake runs only in production. This pattern is the right default for any modern data stack.
+
+**Why Pydantic at the parser boundary?**
+Validation at the point of entry, not downstream. Every FHIR resource is validated and typed before it reaches Snowflake — malformed references, missing required fields, and invalid date formats raise at parse time. Catching data quality problems at the boundary prevents them from propagating silently into the mart layer where they become invisible.
+
+**Why a `TRANSFORMER` role?**
+Least-privilege by design. The transformation path never needs `ACCOUNTADMIN` or `SYSADMIN`. Separating the role enforces that the dbt pipeline can only do what it's supposed to do — a pattern that matters in any HIPAA-adjacent environment where access control is auditable.
+
+---
+
+## Portfolio Arc
+
+| Project | Focus | Status |
+|---|---|---|
+| **Healthcare Claims Intelligence Pipeline** | RCM retrospective — classify 257K denied claims by root cause, quantify $1.2M+ recoverable | Complete |
+| [AI Clinical Documentation Intelligence Pipeline](https://github.com/ericg1212/ai-healthcare-pipeline) | AI governance — enrich + cross-validate + route clinical records before submission | Active |
+| P4 (planned) | Real-time denial prevention — streaming ingestion, rules-based scoring at point of submission | Planned |
+
+Each project builds on the last: P2 shows where denials come from. P3 adds an AI governance layer that catches documentation gaps before they become denials. P4 closes the loop with real-time intervention at submission — prevention instead of retrospective recovery.
 
 ---
 
