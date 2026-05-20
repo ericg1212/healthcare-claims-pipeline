@@ -9,7 +9,7 @@
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
 ![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-orange?style=flat-square)
 
-Not every denied claim is a rework opportunity. This pipeline delivers two outputs from one infrastructure: CARC-level denial attribution across 257K claims that separates systematic denials from documentation failures (RCM), and a T2D+CKD metformin utilization cohort that connects the same claims data to clinical drug utilization signals (RWE).
+**Denied.** Not every denied claim is a rework opportunity — and not all denials are the same problem. This pipeline delivers two outputs from one infrastructure: CARC-level denial attribution across 257K claims that separates systematic denials from documentation failures (RCM), and a T2D+CKD metformin utilization cohort that connects the same claims data to clinical drug utilization signals (RWE).
 
 CMS-0057-F mandates that payers respond to prior authorization requests within 72 hours for urgent cases and 7 days for standard — creating immediate downstream pressure on providers to submit complete, well-documented claims or face accelerating denial rates. CARC 197 (prior-auth gaps) is exactly the category this regulation targets.
 
@@ -58,7 +58,7 @@ Tracking a denial rate is standard practice. Knowing which denials are worth act
 | Incomplete referral documentation or missing referring provider NPI | Require referral ID as a mandatory field in the visit record; link referral tracking to appointment scheduling so the record is complete before the encounter |
 | Rendering provider credentialing mismatch at the payer | Real-time credentialing status check against payer rosters at time of claim; automated re-credentialing alerts at 90/60/30 days before expiration |
 
-**The pipeline surfaces two work queues:** ~27,600 systematic claims each with a defined upstream fix, and 229,400 documentation failures requiring process-level intervention. That separation is the deliverable — without it, every denial looks like a rework candidate, and 89% of the effort lands where it can't move the rate.
+**The pipeline surfaces two work queues:** ~27,600 systematic denials each with a defined upstream fix, and 229,400 documentation failures requiring process-level intervention. **Denied** doesn't mean unrecoverable — it means the pipeline has classified which ones are worth acting on, and which require a different kind of intervention entirely. Without that separation, every denial looks like a rework candidate, and 89% of the effort lands where it can't move the rate.
 
 ---
 
