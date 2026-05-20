@@ -9,6 +9,8 @@
 ![HIPAA](https://img.shields.io/badge/HIPAA-pattern-lightgrey?style=flat-square)
 ![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-orange?style=flat-square)
 
+**Author:** Eric Grynspan · [LinkedIn](https://www.linkedin.com/in/ericgrynspan/) · [GitHub](https://github.com/ericg1212)
+
 **Denied.** Not every denied claim is a rework opportunity — and not all denials are the same problem. This pipeline delivers two outputs from one infrastructure: CARC-level denial attribution across 257K claims that separates systematic denials from documentation failures (RCM), and a T2D+CKD metformin utilization cohort that connects the same claims data to clinical drug utilization signals (RWE).
 
 CMS-0057-F mandates that payers respond to prior authorization requests within 72 hours for urgent cases and 7 days for standard — creating immediate downstream pressure on providers to submit complete, well-documented claims or face accelerating denial rates. CARC 197 (prior-auth gaps) is exactly the category this regulation targets.
