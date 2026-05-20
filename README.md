@@ -1,4 +1,4 @@
-# Healthcare Claims Intelligence Pipeline
+# Denied: Healthcare Claims Intelligence Pipeline
 
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://ericg1212.github.io/healthcare-claims-pipeline/)
@@ -84,9 +84,9 @@ A 45.2% gap in first-line therapy utilization is a meaningful signal — but not
 
 | Project | Focus | Status |
 |---|---|---|
-| **Healthcare Claims Intelligence Pipeline** | RCM retrospective — classify 257K denied claims by root cause, quantify $1.2M+ recoverable | Complete |
-| [AI Clinical Documentation Intelligence Pipeline](https://github.com/ericg1212/ai-healthcare-pipeline) | AI governance — enrich + cross-validate + route clinical records before submission | Active |
-| P4 (planned) | Real-time denial prevention — streaming ingestion, rules-based scoring at point of submission | Planned |
+| **Denied: Healthcare Claims Intelligence Pipeline** | RCM retrospective — classify 257K denied claims by root cause, quantify $1.2M+ recoverable | Complete |
+| [Trust but Verify: AI Clinical Documentation Intelligence Pipeline](https://github.com/ericg1212/ai-healthcare-pipeline) | AI governance — enrich + cross-validate + route clinical records before submission | Active |
+| Cleared: Real-Time Prior Authorization Prevention Pipeline *(planned)* | Real-time denial prevention — streaming ingestion, rules-based scoring at point of submission | Planned |
 
 Each project builds on the last: P2 shows where denials come from. P3 adds an AI governance layer that catches documentation gaps before they become denials. P4 closes the loop with real-time intervention at submission — prevention instead of retrospective recovery.
 
