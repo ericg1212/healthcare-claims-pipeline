@@ -1,4 +1,4 @@
-# Healthcare Claims Intelligence Pipeline
+# Denied: Healthcare Claims Intelligence Pipeline
 
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://ericg1212.github.io/healthcare-claims-pipeline/)
@@ -14,7 +14,6 @@ Not every denied claim is a rework opportunity. This pipeline delivers two outpu
 CMS-0057-F mandates that payers respond to prior authorization requests within 72 hours for urgent cases and 7 days for standard — creating immediate downstream pressure on providers to submit complete, well-documented claims or face accelerating denial rates. CARC 197 (prior-auth gaps) is exactly the category this regulation targets.
 
 ---
-
 
 ## Findings: 495,412 Claims, 51.9% Denial Rate, $1.2M+ Recoverable
 
@@ -78,6 +77,37 @@ Real-world evidence (RWE) studies differ from randomized controlled trials in on
 | Not on metformin | 47 patients (45.2%) |
 
 A 45.2% gap in first-line therapy utilization is a meaningful signal — but not a concluded finding. In a production RWE study, it is the starting point for stratification by CKD stage, eGFR band, payer, and age to distinguish appropriate clinical decision-making (eGFR-based contraindication) from underprescription or access barriers. The pipeline produces the cohort-level data required to run that analysis. Adding a new cohort definition requires one row in `seeds/condition_codes.csv` — no SQL changes.
+
+---
+
+## Portfolio Arc
+
+| Project | Focus | Status |
+|---|---|---|
+| **Denied: Healthcare Claims Intelligence Pipeline** | RCM retrospective — classify 257K denied claims by root cause, quantify $1.2M+ recoverable | Complete |
+| [Trust but Verify: AI Clinical Documentation Intelligence Pipeline](https://github.com/ericg1212/ai-healthcare-pipeline) | AI governance — enrich + cross-validate + route clinical records before submission | Active |
+| Cleared: Real-Time Prior Authorization Prevention Pipeline *(planned)* | Real-time denial prevention — streaming ingestion, rules-based scoring at point of submission | Planned |
+
+Each project builds on the last: P2 shows where denials come from. P3 adds an AI governance layer that catches documentation gaps before they become denials. P4 closes the loop with real-time intervention at submission — prevention instead of retrospective recovery.
+
+---
+
+## Design Decisions
+
+**Why OMOP CDM?**
+OMOP is the standard observational data model used by FDA, NIH, and the OHDSI network — it enables cross-study comparisons and makes the RWE cohort methodology reproducible against any OMOP-compliant dataset. Using a proprietary schema would produce the same numbers but prevent any external validation.
+
+**Why externalize CARC attribution to a seed file?**
+Clinical knowledge shouldn't live in SQL. `seeds/denial_rules.csv` maps procedure codes and payer combinations to CARC codes — adding a new denial rule is a one-row CSV change, no model SQL edits. The same principle applies to the RWE cohort: adding a new condition group is a seed row, not a model rewrite. This separation makes the pipeline maintainable without a data engineer for every rule change.
+
+**Why DuckDB for dev and CI?**
+Snowflake credits don't belong in a CI pipeline. dbt's DuckDB adapter runs the same SQL dialect locally and in GitHub Actions — zero cost, identical logic validation. Snowflake runs only in production. This pattern is the right default for any modern data stack.
+
+**Why Pydantic at the parser boundary?**
+Validation at the point of entry, not downstream. Every FHIR resource is validated and typed before it reaches Snowflake — malformed references, missing required fields, and invalid date formats raise at parse time. Catching data quality problems at the boundary prevents them from propagating silently into the mart layer where they become invisible.
+
+**Why a `TRANSFORMER` role?**
+Least-privilege by design. The transformation path never needs `ACCOUNTADMIN` or `SYSADMIN`. Separating the role enforces that the dbt pipeline can only do what it's supposed to do — a pattern that matters in any HIPAA-adjacent environment where access control is auditable.
 
 ---
 
@@ -185,37 +215,6 @@ healthcare-claims-pipeline/
 │   └── dependabot.yml       # Weekly pip + actions dependency alerts
 └── Makefile                 # generate, load-snowflake, dbt-snowflake, dagster, test
 ```
-
----
-
-## Design Decisions
-
-**Why OMOP CDM?**
-OMOP is the standard observational data model used by FDA, NIH, and the OHDSI network — it enables cross-study comparisons and makes the RWE cohort methodology reproducible against any OMOP-compliant dataset. Using a proprietary schema would produce the same numbers but prevent any external validation.
-
-**Why externalize CARC attribution to a seed file?**
-Clinical knowledge shouldn't live in SQL. `seeds/denial_rules.csv` maps procedure codes and payer combinations to CARC codes — adding a new denial rule is a one-row CSV change, no model SQL edits. The same principle applies to the RWE cohort: adding a new condition group is a seed row, not a model rewrite. This separation makes the pipeline maintainable without a data engineer for every rule change.
-
-**Why DuckDB for dev and CI?**
-Snowflake credits don't belong in a CI pipeline. dbt's DuckDB adapter runs the same SQL dialect locally and in GitHub Actions — zero cost, identical logic validation. Snowflake runs only in production. This pattern is the right default for any modern data stack.
-
-**Why Pydantic at the parser boundary?**
-Validation at the point of entry, not downstream. Every FHIR resource is validated and typed before it reaches Snowflake — malformed references, missing required fields, and invalid date formats raise at parse time. Catching data quality problems at the boundary prevents them from propagating silently into the mart layer where they become invisible.
-
-**Why a `TRANSFORMER` role?**
-Least-privilege by design. The transformation path never needs `ACCOUNTADMIN` or `SYSADMIN`. Separating the role enforces that the dbt pipeline can only do what it's supposed to do — a pattern that matters in any HIPAA-adjacent environment where access control is auditable.
-
----
-
-## Portfolio Arc
-
-| Project | Focus | Status |
-|---|---|---|
-| **Healthcare Claims Intelligence Pipeline** | RCM retrospective — classify 257K denied claims by root cause, quantify $1.2M+ recoverable | Complete |
-| [AI Clinical Documentation Intelligence Pipeline](https://github.com/ericg1212/ai-healthcare-pipeline) | AI governance — enrich + cross-validate + route clinical records before submission | Active |
-| P4 (planned) | Real-time denial prevention — streaming ingestion, rules-based scoring at point of submission | Planned |
-
-Each project builds on the last: P2 shows where denials come from. P3 adds an AI governance layer that catches documentation gaps before they become denials. P4 closes the loop with real-time intervention at submission — prevention instead of retrospective recovery.
 
 ---
 
