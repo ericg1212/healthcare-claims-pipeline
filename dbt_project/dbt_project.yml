@@ -1,6 +1,7 @@
 name: healthcare_claims
 version: '1.0.0'
 config-version: 2
+description: "Healthcare claims intelligence pipeline by Eric Grynspan — CARC-level denial classification, RCM analytics, and RWE cohort construction on FHIR R4 data. Snowflake · dbt · Dagster."
 
 # Which profile in profiles.yml to use
 profile: healthcare_claims
