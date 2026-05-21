@@ -1,7 +1,5 @@
 # Denied: Healthcare Claims Intelligence Pipeline
 
-<div align="center">
-
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://ericg1212.github.io/healthcare-claims-pipeline/)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)
@@ -11,23 +9,25 @@
 ![HIPAA](https://img.shields.io/badge/HIPAA-compliant%20pattern-lightgrey?style=flat-square)
 ![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-E8670A?style=flat-square)
 
-<br/>
-
 ![Claims](https://img.shields.io/badge/Claims-495K-0ea5e9?style=flat-square)
 ![Denial Rate](https://img.shields.io/badge/Denial%20Rate-51.9%25-ef4444?style=flat-square)
 ![Recoverable](https://img.shields.io/badge/Recoverable-%241.2M%2B-22c55e?style=flat-square)
 ![dbt Tests](https://img.shields.io/badge/dbt%20Tests-83-FF694B?style=flat-square&logo=dbt&logoColor=white)
 ![pytest](https://img.shields.io/badge/pytest-40-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
 
-<br/>
-
-**By [Eric Grynspan](https://www.linkedin.com/in/ericgrynspan/)** &nbsp;·&nbsp; [Portfolio](https://ericg1212.github.io) &nbsp;·&nbsp; [dbt Docs](https://ericg1212.github.io/healthcare-claims-pipeline/)
-
-</div>
+**By [Eric Grynspan](https://www.linkedin.com/in/ericgrynspan/)** &nbsp;·&nbsp; [Portfolio](https://ericg1212.github.io) &nbsp;·&nbsp; [dbt Docs](https://ericg1212.github.io/healthcare-claims-pipeline/) &nbsp;·&nbsp; [P3 — Trust but Verify →](https://github.com/ericg1212/ai-healthcare-pipeline)
 
 ---
 
-> **Portfolio arc:** [P2 — Denied *(this project)*](https://github.com/ericg1212/healthcare-claims-pipeline) &nbsp;→&nbsp; [P3 — Trust but Verify](https://github.com/ericg1212/ai-healthcare-pipeline) &nbsp;→&nbsp; P4 — Cleared *(real-time denial prevention, planned)*
+## Portfolio Arc
+
+P2 classified denials retrospectively. P3 adds AI governance. P4 prevents the denial before it happens.
+
+| Project | Focus | Status |
+|---|---|---|
+| **[P2 — Denied *(this project)*](https://github.com/ericg1212/healthcare-claims-pipeline)** | Retrospective denial classification — separate 27K systematic denials with an upstream fix from 229K documentation failures requiring a different intervention | Live |
+| [P3 — Trust but Verify](https://github.com/ericg1212/ai-healthcare-pipeline) | Clinical AI governance — LLM enrichment + rules engine cross-validation, every routing decision explainable | Live |
+| P4 — Cleared *(planned)* | Real-time prior auth prevention — RAG-enhanced payer criteria matching at point of submission, streaming ingestion | Planned |
 
 ---
 
