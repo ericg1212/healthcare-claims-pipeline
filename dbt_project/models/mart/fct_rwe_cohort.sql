@@ -21,7 +21,12 @@ ckd as (
 metformin as (
     select distinct person_id
     from {{ ref('stg_drug_exposure') }}
-    where lower(drug_display) like '%metformin%'
+    where drug_source_value in (
+        '860975',   -- metformin hydrochloride 500 MG Oral Tablet
+        '861004',   -- metformin hydrochloride 850 MG Oral Tablet
+        '861007',   -- metformin hydrochloride 1000 MG Oral Tablet
+        '1807894'   -- 24 HR metformin hydrochloride 500 MG Extended Release Oral Tablet
+    )
 ),
 
 cohort as (
