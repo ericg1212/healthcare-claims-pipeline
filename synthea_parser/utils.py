@@ -35,12 +35,10 @@ def parse_datetime(value: Optional[str]) -> Optional[datetime]:
     """
     if not value:
         return None
-    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
-        try:
-            return datetime.strptime(value[:len(fmt) + 5], fmt)
-        except ValueError:
-            continue
-    return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 def parse_date(value: Optional[str]):

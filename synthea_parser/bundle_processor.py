@@ -43,16 +43,6 @@ class ParsedBundle:
     payer_periods: list[PayerPlanPeriod] = field(default_factory=list)
 
 
-# Map FHIR resourceType to the parser function for that type
-PARSERS = {
-    "Patient": parse_patient,
-    "Encounter": parse_encounter,
-    "Condition": parse_condition,
-    "MedicationRequest": parse_medication_request,
-    "Coverage": parse_coverage,
-}
-
-
 def process_bundle(path: Path) -> ParsedBundle | None:
     """
     Parse one Synthea FHIR patient bundle file into a ParsedBundle.
