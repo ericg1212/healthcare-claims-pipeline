@@ -9,6 +9,7 @@ select
       submitted_amount,
       payment_amount,
        submitted_amount - payment_amount        as denied_amount,
+  -- SYNC: mirrors derive_denial_flag() in synthea_parser/utils.py — update both if logic changes
   case
       when payer_name != 'NO_INSURANCE'
        and payment_amount = 0

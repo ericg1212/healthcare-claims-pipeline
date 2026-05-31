@@ -42,15 +42,15 @@ class ParsedBundle:
     claim_lines: list[ClaimLine] = field(default_factory=list)
     payer_periods: list[PayerPlanPeriod] = field(default_factory=list)
 
-
-# Map FHIR resourceType to the parser function for that type
-PARSERS = {
-    "Patient": parse_patient,
-    "Encounter": parse_encounter,
-    "Condition": parse_condition,
-    "MedicationRequest": parse_medication_request,
-    "Coverage": parse_coverage,
-}
+    def merge(self, other: ParsedBundle) -> None:
+        """Append all records from another ParsedBundle into this one."""
+        self.persons.extend(other.persons)
+        self.visits.extend(other.visits)
+        self.conditions.extend(other.conditions)
+        self.drugs.extend(other.drugs)
+        self.claim_headers.extend(other.claim_headers)
+        self.claim_lines.extend(other.claim_lines)
+        self.payer_periods.extend(other.payer_periods)
 
 
 def process_bundle(path: Path) -> ParsedBundle | None:
@@ -132,13 +132,7 @@ def process_all_bundles(fhir_dir: Path) -> ParsedBundle:
         bundle = process_bundle(path)
         if bundle is None:
             continue
-        merged.persons.extend(bundle.persons)
-        merged.visits.extend(bundle.visits)
-        merged.conditions.extend(bundle.conditions)
-        merged.drugs.extend(bundle.drugs)
-        merged.claim_headers.extend(bundle.claim_headers)
-        merged.claim_lines.extend(bundle.claim_lines)
-        merged.payer_periods.extend(bundle.payer_periods)
+        merged.merge(bundle)
 
     logger.info(
         "Parsed: %d patients | %d visits | %d conditions | %d drugs | "
