@@ -1,6 +1,8 @@
 # Denied: Healthcare Claims Intelligence Pipeline
 
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/codeql.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/codeql.yml)
+[![Release](https://img.shields.io/github/v/release/ericg1212/healthcare-claims-pipeline?style=flat-square)](https://github.com/ericg1212/healthcare-claims-pipeline/releases)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://ericg1212.github.io/healthcare-claims-pipeline/)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=flat-square&logo=snowflake&logoColor=white)
