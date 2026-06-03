@@ -27,7 +27,7 @@ Denied classified denials retrospectively. Trust but Verify adds AI governance. 
 
 | Pipeline | Focus | Status |
 |---|---|---|
-| **[Denied *(this pipeline)*](https://github.com/ericg1212/healthcare-claims-pipeline)** | Retrospective denial classification — separate 27K systematic denials with an upstream fix from 229K documentation failures requiring a different intervention | Live |
+| **[Denied *(this project)*](https://github.com/ericg1212/healthcare-claims-pipeline)** | Retrospective denial classification — separate 27K systematic denials with an upstream fix from 229K documentation failures requiring a different intervention | Live |
 | [Trust but Verify](https://github.com/ericg1212/ai-healthcare-pipeline) | Clinical AI governance — LLM enrichment + rules engine cross-validation, every routing decision explainable | Live |
 | Cleared *(planned)* | Real-time prior auth prevention — RAG-enhanced payer criteria matching at point of submission, streaming ingestion | Planned |
 
@@ -196,7 +196,7 @@ pytest covers `extract_uuid`, `parse_datetime`, `hash_id`, `get_coding`, `is_ins
 
 ---
 
-## Structure
+## Project Structure
 
 ```
 healthcare-claims-pipeline/
