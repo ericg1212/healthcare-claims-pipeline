@@ -10,7 +10,7 @@ dbt-duckdb==1.10.1            # CI adapter — no Snowflake credits in CI
 
 # ── FHIR parser ──────────────────────────────────────────────────
 pydantic==2.13.3              # FHIR resource models + validation
-snowflake-sqlalchemy>=1.9.0   # Snowflake bulk load
+snowflake-sqlalchemy>=1.10.0   # Snowflake bulk load
 snowflake-connector-python>=4.5.0
 
 # ── Data utilities ───────────────────────────────────────────────
