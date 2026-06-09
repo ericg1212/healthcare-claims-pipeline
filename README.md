@@ -52,88 +52,61 @@ CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each w
 
 **Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level. At average reimbursement rates, the recoverable systematic denial pool represents **$1.2M+ in reclaimable revenue** — the portion with a defined upstream fix and a clear ROI case for intervention.
 
-> **On the 51.9% denial rate:** Real-world denial rates typically run 5–15%. The elevated rate here reflects how Synthea models payer eligibility and coverage — it simulates a broad range of payer scenarios including Medicaid, commercial, and self-pay, which produces a higher synthetic denial proportion than a single-payer or single-provider production dataset would. The pipeline's value is in the classification methodology: CARC-level attribution, systematic vs. documentation separation, and seed-driven rule management apply identically at real-world claim volumes. The rate is a simulation artifact; the architecture is production-pattern.
+> **On the 51.9% denial rate:** Real-world rates run 5–15%. The elevated figure reflects Synthea's broad payer simulation across Medicaid, commercial, and self-pay — a simulation artifact. The CARC attribution methodology applies identically at production volumes.
 
 ---
 
-## Fix the Submission, or Fix the Workflow?
+## Two Different Problems, Two Different Fixes
 
-Tracking a denial rate is standard practice. Knowing which denials are worth acting on is less common — and that distinction shapes every decision downstream. Those 257,000 denials aren't one problem — they're two fundamentally different problems, and treating them the same is where denial management budgets quietly disappear.
+257,000 denials aren't one problem. CARC 197 and 96 are systematic — same trigger, same code, deterministic upstream fix. CARC 16 at 89% is a documentation quality problem that requires a workflow audit, not a rework queue.
 
-**Systematic denials follow a pattern.** CARC 197 fires every time a renal dialysis or telehealth claim arrives without a prior authorization reference number. CARC 96 fires every time a Medicaid formulary conflict — catchable at prescribing — reaches adjudication instead. Same trigger, same code, every time. The services are covered; the submissions were incomplete. Fix the workflow once, stop the denial.
+| CARC | Type | Root Cause | Fix |
+|------|------|------------|-----|
+| 197 | Systematic | PA reference number absent on covered telehealth/renal dialysis claims | Enforce PA number as required field at claim submission |
+| 96 | Systematic | Medicaid formulary conflict caught at adjudication instead of prescribing | Move formulary check upstream to point of prescribing |
+| 16 | Documentation | Catch-all — missing notes, wrong modifiers, credentialing mismatches | Submission quality audit to identify dominant subtype; workflow fix at encounter close |
 
-**Documentation failures are a different kind of problem.** CARC 16 — "claim lacks information to adjudicate" — covers 89.3% of denials and spans five distinct failure modes across documentation, coding, and credentialing. Reworking these claims one by one treats the symptom rather than the source; the root cause sits in the clinical workflow, not in the submission.
-
-**The classification matters because the remediation path is fundamentally different:**
-
-| CARC | Type | Root Cause | Remediation |
-|------|------|------------|-------------|
-| 197 | Systematic | Renal dialysis and telehealth claims submitted without a prior authorization reference number — the service is covered, the submission is incomplete | Enforce PA reference number as a required field before claim submission; block filing if absent for PA-required procedure codes |
-| 96 | Systematic | Drug not on Medicaid formulary — first-line therapies flagged post-prescribing when the conflict could have been detected at the point of care | Move the formulary check upstream to prescribing; a conflict identified at adjudication is too late to prevent the denial |
-| 16 | Random | Claim lacks information to adjudicate — a catch-all code covering documentation gaps, coding errors, and credentialing failures across the clinical and billing workflow | Submission quality audit to identify the dominant subtype; root-cause-specific checklists at encounter close, not a blanket rework queue |
-
-**CARC 197 and 96 each have a single, addressable fix point.** Prior-auth workflow check at submission for 197; formulary conflict detection moved to the prescribing decision for 96. Together ~27,600 denials with a deterministic root cause and a clear ROI case for remediation.
-
-**CARC 16 calls for an audit rather than a rework queue.** At 89.3% of denials, the useful question shifts from "can we recover these?" to "which documentation failure is most prevalent, and where in the workflow does it originate?" The five root causes in this cohort, and where to intervene:
+**CARC 16 root causes and mitigations:**
 
 | Root Cause | Mitigation |
 |------------|------------|
-| Missing prior authorization reference number on claims for services that *were* authorized | PA reference validation at claim creation; block submission if PA number is absent for codes that require prior auth |
-| Absent medical necessity documentation — no clinical notes attached to support the procedure code | Enforce documentation completeness at encounter close; prevent billing until the relevant clinical note is finalized in the EHR |
-| Missing or incorrect CPT modifiers — e.g., telehealth modifier -95 absent on video visit claims | Automated modifier scrubbing against payer-specific rules at claim creation; flag -95 requirement for all telehealth service codes |
-| Incomplete referral documentation or missing referring provider NPI | Require referral ID as a mandatory field in the visit record; link referral tracking to appointment scheduling so the record is complete before the encounter |
-| Rendering provider credentialing mismatch at the payer | Real-time credentialing status check against payer rosters at time of claim; automated re-credentialing alerts at 90/60/30 days before expiration |
-
-**The pipeline surfaces two work queues:** ~27,600 systematic denials each with a defined upstream fix, and 229,400 documentation failures requiring process-level intervention. **Denied** doesn't mean unrecoverable — it means the pipeline has classified which ones are worth acting on, and which require a different kind of intervention entirely. Without that separation, every denial looks like a rework candidate, and 89% of the effort lands where it can't move the rate.
+| Missing PA reference on authorized claims | PA number required field at claim creation |
+| Missing medical necessity documentation | Enforce note completion at encounter close before billing |
+| Incorrect CPT modifiers (e.g., -95 absent on telehealth) | Automated modifier scrub at claim creation |
+| Missing referring provider NPI / referral docs | Referral ID required in visit record, linked to scheduling |
+| Rendering provider credentialing mismatch | Real-time payer roster check; 90/60/30-day re-credentialing alerts |
 
 ---
 
-## Same Data, Second Question
+## RWE: Same Data, Second Question
 
-The same OMOP CDM layer that drives denial attribution can answer a second analytical question without rebuilding any part of the ingestion pipeline: are the right patients getting the right drugs?
-
-Real-world evidence (RWE) studies differ from randomized controlled trials in one key way: they measure what actually happens in clinical practice, not under controlled conditions. The pipeline identifies patients with comorbid Type 2 Diabetes (T2D, SNOMED 44054006) and Chronic Kidney Disease (CKD, stages 1–4) from OMOP condition records — a clinically significant cohort because ADA guidelines name metformin as first-line therapy for T2D, but CKD complicates dosing at eGFR thresholds (dose reduction required at eGFR <45, contraindicated at eGFR <30). This creates a zone where clinician judgment varies and underprescription is common.
+The same OMOP layer answers a second question without rebuilding the pipeline: are the right patients getting the right drugs? ADA guidelines name metformin first-line for T2D, but CKD complicates dosing at eGFR thresholds — a clinically significant gap where underprescription is common.
 
 **T2D + CKD Metformin Utilization (104-patient cohort)**
 
 | Metric | Value |
 |--------|-------|
 | Cohort size (T2D + CKD) | 104 patients |
-| On metformin | 57 patients (54.8%) |
-| Not on metformin | 47 patients (45.2%) |
+| On metformin | 57 (54.8%) |
+| Not on metformin | 47 (45.2%) |
 
-A 45.2% gap in first-line therapy utilization is a meaningful signal — but not a concluded finding. In a production RWE study, it is the starting point for stratification by CKD stage, eGFR band, payer, and age to distinguish appropriate clinical decision-making (eGFR-based contraindication) from underprescription or access barriers. The pipeline produces the cohort-level data required to run that analysis. Adding a new cohort definition requires one row in `seeds/condition_codes.csv` — no SQL changes.
+A 45.2% gap is a meaningful signal, not a concluded finding — the starting point for stratification by CKD stage, eGFR band, payer, and age. Adding a new cohort requires one row in `seeds/condition_codes.csv`, no SQL changes.
 
 ---
 
 ## Design Decisions
 
-**Why OMOP CDM?**
-OMOP is the standard observational data model used by FDA, NIH, and the OHDSI network — it enables cross-study comparisons and makes the RWE cohort methodology reproducible against any OMOP-compliant dataset. Using a proprietary schema would produce the same numbers but prevent any external validation.
-
-**Why externalize CARC attribution to a seed file?**
-Clinical knowledge shouldn't live in SQL. `seeds/denial_rules.csv` maps procedure codes and payer combinations to CARC codes — adding a new denial rule is a one-row CSV change, no model SQL edits. The same principle applies to the RWE cohort: adding a new condition group is a seed row, not a model rewrite. This separation makes the pipeline maintainable without a data engineer for every rule change.
-
-**Why DuckDB for dev and CI?**
-Snowflake credits don't belong in a CI pipeline. dbt's DuckDB adapter runs the same SQL dialect locally and in GitHub Actions — zero cost, identical logic validation. Snowflake runs only in production. This pattern is the right default for any modern data stack.
-
-**Why Pydantic at the parser boundary?**
-Validation at the point of entry, not downstream. Every FHIR resource is validated and typed before it reaches Snowflake — malformed references, missing required fields, and invalid date formats raise at parse time. Catching data quality problems at the boundary prevents them from propagating silently into the mart layer where they become invisible.
-
-**Why a `TRANSFORMER` role?**
-Least-privilege by design. The transformation path never needs `ACCOUNTADMIN` or `SYSADMIN`. Separating the role enforces that the dbt pipeline can only do what it's supposed to do — a pattern that matters in any HIPAA-adjacent environment where access control is auditable.
-
-**Why seed-based CARC attribution instead of parsed 835 EDI?**
-Synthea generates HL7 FHIR R4 — there are no X12 835 remittance advice files to parse. CARC codes are assigned by a rules engine in `seeds/denial_rules.csv` that maps procedure code and payer combination patterns to the appropriate CARC code. This mirrors how a real RCM system derives denial attribution in the absence of payer-returned 835 data — rules sourced from payer policy documentation and prior denial patterns. The seed approach makes attribution logic auditable, version-controlled, and editable without touching model SQL. A real 835 feed would replace the seed with parsed remittance data; the mart layer SQL stays unchanged.
-
-**Why Dagster instead of Airflow?**
-Airflow is task-centric: the DAG describes execution order, not data lineage. Dagster's software-defined assets model inverts this — each asset declares what data it produces and what it depends on. The full lineage graph is queryable, observable, and re-runnable at the asset level rather than the task level. For a pipeline where the mart tables are the artifacts being monitored, SDA is the right primitive. Airflow would require separate lineage tooling to answer "what downstream assets are affected if RAW re-loads?" — Dagster answers that natively.
-
-**Why no intermediate dbt layer?**
-The staging views are thin, one-to-one OMOP wrappers — they clean and type-coerce RAW columns but apply no business logic. The mart layer applies CARC attribution and cohort logic directly on staging. An intermediate layer would add a materialization step without adding clarity; the business logic in `fct_denials` and `fct_rwe_cohort` is self-contained and doesn't benefit from a shared intermediate abstraction. If a third mart model emerged that shared aggregation logic with the first two, an intermediate layer would be warranted.
-
-**Why RxNorm concept IDs for metformin, not string matching?**
-`fct_rwe_cohort` identifies metformin by RxNorm concept IDs (860975, 861004, 861007, 1807894) — not `LIKE '%metformin%'`. String matching on drug names produces false positives on combination therapies and brand name variations. RxNorm concept IDs are the standard in OMOP drug exposure tables and map to specific drug formulations, enabling precise cohort definitions reproducible across any OMOP-compliant dataset.
+| Decision | Why |
+|---|---|
+| **OMOP CDM** | FDA/NIH/OHDSI standard — makes RWE cohort methodology reproducible against any OMOP-compliant dataset, not just this pipeline |
+| **Seed-based CARC attribution** | Synthea generates FHIR R4, not X12 835 EDI — no remittance files to parse. Rules live in `denial_rules.csv`: one CSV row to add a denial pattern, no SQL edits. A real 835 feed replaces the seed; mart SQL stays unchanged |
+| **Externalized condition codes** | Same principle as CARC seeds — adding a new RWE cohort is a seed row, not a model rewrite. Clinical knowledge stays out of SQL |
+| **DuckDB for dev + CI** | Snowflake credits don't belong in a CI pipeline. dbt-duckdb runs identical SQL dialect locally and in GitHub Actions at zero cost |
+| **Pydantic at the parser boundary** | Malformed FHIR references, missing fields, and invalid dates raise at parse time — not silently downstream in the mart layer |
+| **`TRANSFORMER` role** | Least-privilege: the dbt pipeline never needs `ACCOUNTADMIN`. Required pattern in any HIPAA-adjacent environment where access is auditable |
+| **Dagster over Airflow** | Airflow describes execution order; Dagster's software-defined assets describe data lineage. Asset-level re-runs and native lineage graph — no separate tooling needed |
+| **No intermediate dbt layer** | Staging views are thin OMOP wrappers with no shared business logic. `fct_denials` and `fct_rwe_cohort` apply attribution directly on staging — an intermediate layer would add materialization cost with no clarity gain |
+| **RxNorm concept IDs for metformin** | `LIKE '%metformin%'` produces false positives on combination therapies. RxNorm IDs (860975, 861004, 861007, 1807894) map to specific formulations and are reproducible across any OMOP dataset |
 
 ---
 
