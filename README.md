@@ -52,6 +52,8 @@ CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each w
 
 **Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level. At average reimbursement rates, the recoverable systematic denial pool represents **$1.2M+ in reclaimable revenue** — the portion with a defined upstream fix and a clear ROI case for intervention.
 
+> **On the 51.9% denial rate:** Real-world denial rates typically run 5–15%. The elevated rate here reflects how Synthea models payer eligibility and coverage — it simulates a broad range of payer scenarios including Medicaid, commercial, and self-pay, which produces a higher synthetic denial proportion than a single-payer or single-provider production dataset would. The pipeline's value is in the classification methodology: CARC-level attribution, systematic vs. documentation separation, and seed-driven rule management apply identically at real-world claim volumes. The rate is a simulation artifact; the architecture is production-pattern.
+
 ---
 
 ## Fix the Submission, or Fix the Workflow?
@@ -120,6 +122,18 @@ Validation at the point of entry, not downstream. Every FHIR resource is validat
 
 **Why a `TRANSFORMER` role?**
 Least-privilege by design. The transformation path never needs `ACCOUNTADMIN` or `SYSADMIN`. Separating the role enforces that the dbt pipeline can only do what it's supposed to do — a pattern that matters in any HIPAA-adjacent environment where access control is auditable.
+
+**Why seed-based CARC attribution instead of parsed 835 EDI?**
+Synthea generates HL7 FHIR R4 — there are no X12 835 remittance advice files to parse. CARC codes are assigned by a rules engine in `seeds/denial_rules.csv` that maps procedure code and payer combination patterns to the appropriate CARC code. This mirrors how a real RCM system derives denial attribution in the absence of payer-returned 835 data — rules sourced from payer policy documentation and prior denial patterns. The seed approach makes attribution logic auditable, version-controlled, and editable without touching model SQL. A real 835 feed would replace the seed with parsed remittance data; the mart layer SQL stays unchanged.
+
+**Why Dagster instead of Airflow?**
+Airflow is task-centric: the DAG describes execution order, not data lineage. Dagster's software-defined assets model inverts this — each asset declares what data it produces and what it depends on. The full lineage graph is queryable, observable, and re-runnable at the asset level rather than the task level. For a pipeline where the mart tables are the artifacts being monitored, SDA is the right primitive. Airflow would require separate lineage tooling to answer "what downstream assets are affected if RAW re-loads?" — Dagster answers that natively.
+
+**Why no intermediate dbt layer?**
+The staging views are thin, one-to-one OMOP wrappers — they clean and type-coerce RAW columns but apply no business logic. The mart layer applies CARC attribution and cohort logic directly on staging. An intermediate layer would add a materialization step without adding clarity; the business logic in `fct_denials` and `fct_rwe_cohort` is self-contained and doesn't benefit from a shared intermediate abstraction. If a third mart model emerged that shared aggregation logic with the first two, an intermediate layer would be warranted.
+
+**Why RxNorm concept IDs for metformin, not string matching?**
+`fct_rwe_cohort` identifies metformin by RxNorm concept IDs (860975, 861004, 861007, 1807894) — not `LIKE '%metformin%'`. String matching on drug names produces false positives on combination therapies and brand name variations. RxNorm concept IDs are the standard in OMOP drug exposure tables and map to specific drug formulations, enabling precise cohort definitions reproducible across any OMOP-compliant dataset.
 
 ---
 
