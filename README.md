@@ -108,32 +108,17 @@ A 45.2% gap in first-line therapy utilization is a meaningful signal — but not
 
 ## Design Decisions
 
-**Why OMOP CDM?**
-OMOP is the standard observational data model used by FDA, NIH, and the OHDSI network — it enables cross-study comparisons and makes the RWE cohort methodology reproducible against any OMOP-compliant dataset. Using a proprietary schema would produce the same numbers but prevent any external validation.
-
-**Why externalize CARC attribution to a seed file?**
-Clinical knowledge shouldn't live in SQL. `seeds/denial_rules.csv` maps procedure codes and payer combinations to CARC codes — adding a new denial rule is a one-row CSV change, no model SQL edits. The same principle applies to the RWE cohort: adding a new condition group is a seed row, not a model rewrite. This separation makes the pipeline maintainable without a data engineer for every rule change.
-
-**Why DuckDB for dev and CI?**
-Snowflake credits don't belong in a CI pipeline. dbt's DuckDB adapter runs the same SQL dialect locally and in GitHub Actions — zero cost, identical logic validation. Snowflake runs only in production. This pattern is the right default for any modern data stack.
-
-**Why Pydantic at the parser boundary?**
-Validation at the point of entry, not downstream. Every FHIR resource is validated and typed before it reaches Snowflake — malformed references, missing required fields, and invalid date formats raise at parse time. Catching data quality problems at the boundary prevents them from propagating silently into the mart layer where they become invisible.
-
-**Why a `TRANSFORMER` role?**
-Least-privilege by design. The transformation path never needs `ACCOUNTADMIN` or `SYSADMIN`. Separating the role enforces that the dbt pipeline can only do what it's supposed to do — a pattern that matters in any HIPAA-adjacent environment where access control is auditable.
-
-**Why seed-based CARC attribution instead of parsed 835 EDI?**
-Synthea generates HL7 FHIR R4 — there are no X12 835 remittance advice files to parse. CARC codes are assigned by a rules engine in `seeds/denial_rules.csv` that maps procedure code and payer combination patterns to the appropriate CARC code. This mirrors how a real RCM system derives denial attribution in the absence of payer-returned 835 data — rules sourced from payer policy documentation and prior denial patterns. The seed approach makes attribution logic auditable, version-controlled, and editable without touching model SQL. A real 835 feed would replace the seed with parsed remittance data; the mart layer SQL stays unchanged.
-
-**Why Dagster instead of Airflow?**
-Airflow is task-centric: the DAG describes execution order, not data lineage. Dagster's software-defined assets model inverts this — each asset declares what data it produces and what it depends on. The full lineage graph is queryable, observable, and re-runnable at the asset level rather than the task level. For a pipeline where the mart tables are the artifacts being monitored, SDA is the right primitive. Airflow would require separate lineage tooling to answer "what downstream assets are affected if RAW re-loads?" — Dagster answers that natively.
-
-**Why no intermediate dbt layer?**
-The staging views are thin, one-to-one OMOP wrappers — they clean and type-coerce RAW columns but apply no business logic. The mart layer applies CARC attribution and cohort logic directly on staging. An intermediate layer would add a materialization step without adding clarity; the business logic in `fct_denials` and `fct_rwe_cohort` is self-contained and doesn't benefit from a shared intermediate abstraction. If a third mart model emerged that shared aggregation logic with the first two, an intermediate layer would be warranted.
-
-**Why RxNorm concept IDs for metformin, not string matching?**
-`fct_rwe_cohort` identifies metformin by RxNorm concept IDs (860975, 861004, 861007, 1807894) — not `LIKE '%metformin%'`. String matching on drug names produces false positives on combination therapies and brand name variations. RxNorm concept IDs are the standard in OMOP drug exposure tables and map to specific drug formulations, enabling precise cohort definitions reproducible across any OMOP-compliant dataset.
+| Decision | Why |
+|---|---|
+| **OMOP CDM** | FDA/NIH/OHDSI standard — makes RWE cohort methodology reproducible against any OMOP-compliant dataset, not just this pipeline |
+| **Seed-based CARC attribution** | Synthea generates FHIR R4, not X12 835 EDI — no remittance files to parse. Rules live in `denial_rules.csv`: one CSV row to add a denial pattern, no SQL edits. A real 835 feed replaces the seed; mart SQL stays unchanged |
+| **Externalized condition codes** | Same principle as CARC seeds — adding a new RWE cohort is a seed row, not a model rewrite. Clinical knowledge stays out of SQL |
+| **DuckDB for dev + CI** | Snowflake credits don't belong in a CI pipeline. dbt-duckdb runs identical SQL dialect locally and in GitHub Actions at zero cost |
+| **Pydantic at the parser boundary** | Malformed FHIR references, missing fields, and invalid dates raise at parse time — not silently downstream in the mart layer |
+| **`TRANSFORMER` role** | Least-privilege: the dbt pipeline never needs `ACCOUNTADMIN`. Required pattern in any HIPAA-adjacent environment where access is auditable |
+| **Dagster over Airflow** | Airflow describes execution order; Dagster's software-defined assets describe data lineage. Asset-level re-runs and native lineage graph — no separate tooling needed |
+| **No intermediate dbt layer** | Staging views are thin OMOP wrappers with no shared business logic. `fct_denials` and `fct_rwe_cohort` apply attribution directly on staging — an intermediate layer would add materialization cost with no clarity gain |
+| **RxNorm concept IDs for metformin** | `LIKE '%metformin%'` produces false positives on combination therapies. RxNorm IDs (860975, 861004, 861007, 1807894) map to specific formulations and are reproducible across any OMOP dataset |
 
 ---
 
