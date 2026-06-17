@@ -1,3 +1,4 @@
+﻿# Copyright (c) 2026 Eric Grynspan. All rights reserved.
 """
 Create DuckDB dev fixture database with raw schema tables and sample data.
 

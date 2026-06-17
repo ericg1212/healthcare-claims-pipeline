@@ -1,3 +1,4 @@
+﻿-- Copyright (c) 2026 Eric Grynspan. All rights reserved.
 {{ config(materialized='table') }}
 
 with condition_codes as (select * from {{ ref('condition_codes') }}),

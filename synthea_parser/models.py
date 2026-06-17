@@ -1,3 +1,4 @@
+﻿# Copyright (c) 2026 Eric Grynspan. All rights reserved.
 """
 Pydantic models for FHIR R4 resources produced by Synthea.
 

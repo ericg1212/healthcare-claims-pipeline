@@ -1,3 +1,4 @@
+﻿-- Copyright (c) 2026 Eric Grynspan. All rights reserved.
 -- Run once in Snowflake console (as ACCOUNTADMIN or SYSADMIN)
 -- Creates all objects needed for the healthcare_claims dbt project
 

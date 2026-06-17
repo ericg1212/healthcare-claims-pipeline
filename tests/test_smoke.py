@@ -1,3 +1,4 @@
+﻿# Copyright (c) 2026 Eric Grynspan. All rights reserved.
 import pytest
 from synthea_parser.utils import (
     extract_uuid, parse_datetime, hash_id,
