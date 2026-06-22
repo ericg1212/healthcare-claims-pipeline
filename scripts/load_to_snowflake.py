@@ -1,3 +1,4 @@
+﻿# Copyright (c) 2026 Eric Grynspan. All rights reserved.
 import argparse
 import logging
 from pathlib import Path
