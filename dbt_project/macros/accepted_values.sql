@@ -1,3 +1,4 @@
+﻿-- Copyright (c) 2026 Eric Grynspan. All rights reserved.
 {% test accepted_values(model, column_name, values, quote=True, arguments=none) %}
 
 with all_values as (

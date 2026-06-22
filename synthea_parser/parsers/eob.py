@@ -1,3 +1,4 @@
+﻿# Copyright (c) 2026 Eric Grynspan. All rights reserved.
 """
 Parser for FHIR R4 ExplanationOfBenefit (EOB) resources.
 
