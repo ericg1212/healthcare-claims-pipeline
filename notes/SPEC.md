@@ -2,7 +2,7 @@
 
 **Status:** Pre-build  
 **Target completion:** Apr 27, 2026  
-**Portfolio role:** Demonstrates end-to-end healthcare data engineering — FHIR ingestion, OMOP CDM mapping, claims analytics, dual-pitch output (RCM + RWE)
+Demonstrates end-to-end healthcare data engineering — FHIR ingestion, OMOP CDM mapping, claims analytics, dual-pitch output (RCM + RWE)
 
 ---
 
@@ -270,7 +270,7 @@ snowflake_raw_load        # COPY INTO RAW schema
 ### Dagster Configuration
 - **Executor:** In-process (local dev), multiprocess for full runs  
 - **Resources:** Snowflake resource (connection via env vars), dbt resource (dagster-dbt integration)  
-- **Schedules:** Manual trigger for portfolio (no prod schedule needed)  
+- **Schedules:** Manual trigger (no prod schedule needed)  
 - **UI:** localhost:3000 — screenshot for README  
 - **Asset checks:** Block downstream if upstream asset fails row count or freshness check
 
