@@ -17,11 +17,9 @@
 ![dbt Tests](https://img.shields.io/badge/dbt%20Tests-83-FF694B?style=flat-square&logo=dbt&logoColor=white)
 ![pytest](https://img.shields.io/badge/pytest-40-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
 
-**By [Eric Grynspan](https://www.linkedin.com/in/ericgrynspan/)** &nbsp;·&nbsp; [Portfolio](https://ericg1212.github.io) &nbsp;·&nbsp; [dbt Docs](https://ericg1212.github.io/healthcare-claims-pipeline/) &nbsp;·&nbsp; [Trust but Verify →](https://github.com/ericg1212/ai-healthcare-pipeline)
+**By [Eric Grynspan](https://www.linkedin.com/in/ericgrynspan/)** &nbsp;·&nbsp; [dbt Docs](https://ericg1212.github.io/healthcare-claims-pipeline/) &nbsp;·&nbsp; [Trust but Verify →](https://github.com/ericg1212/ai-healthcare-pipeline)
 
 ---
-
-## Portfolio Arc
 
 Denied classified denials retrospectively. Trust but Verify adds AI governance. Cleared prevents the denial before it happens.
 
