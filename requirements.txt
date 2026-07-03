@@ -4,7 +4,7 @@ dagster-dbt==0.29.6
 dagster-webserver==1.13.6
 
 # ── dbt ──────────────────────────────────────────────────────────
-dbt-core==1.11.11
+dbt-core==1.11.12
 dbt-snowflake==1.11.5
 dbt-duckdb==1.10.1            # CI adapter — no Snowflake credits in CI
 
