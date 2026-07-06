@@ -96,15 +96,15 @@ A 45.2% gap is a meaningful signal, not a concluded finding — the starting poi
 
 | Decision | Why |
 |---|---|
-| **OMOP CDM** | FDA/NIH/OHDSI standard — makes RWE cohort methodology reproducible against any OMOP-compliant dataset, not just this pipeline |
-| **Seed-based CARC attribution** | Synthea generates FHIR R4, not X12 835 EDI — no remittance files to parse. Rules live in `denial_rules.csv`: one CSV row to add a denial pattern, no SQL edits. A real 835 feed replaces the seed; mart SQL stays unchanged |
-| **Externalized condition codes** | Same principle as CARC seeds — adding a new RWE cohort is a seed row, not a model rewrite. Clinical knowledge stays out of SQL |
-| **DuckDB for dev + CI** | Snowflake credits don't belong in a CI pipeline. dbt-duckdb runs identical SQL dialect locally and in GitHub Actions at zero cost |
-| **Pydantic at the parser boundary** | Malformed FHIR references, missing fields, and invalid dates raise at parse time — not silently downstream in the mart layer |
-| **`TRANSFORMER` role** | Least-privilege: the dbt pipeline never needs `ACCOUNTADMIN`. Required pattern in any HIPAA-adjacent environment where access is auditable |
-| **Dagster over Airflow** | Airflow describes execution order; Dagster's software-defined assets describe data lineage. Asset-level re-runs and native lineage graph — no separate tooling needed |
-| **No intermediate dbt layer** | Staging views are thin OMOP wrappers with no shared business logic. `fct_denials` and `fct_rwe_cohort` apply attribution directly on staging — an intermediate layer would add materialization cost with no clarity gain |
-| **RxNorm concept IDs for metformin** | `LIKE '%metformin%'` produces false positives on combination therapies. RxNorm IDs (860975, 861004, 861007, 1807894) map to specific formulations and are reproducible across any OMOP dataset |
+| **OMOP CDM** | FDA/NIH/OHDSI standard — the RWE methodology reproduces against any OMOP dataset, not just this pipeline |
+| **Seed-based CARC attribution** | Synthea emits FHIR, not X12 835 remittances — attribution rules live in a seed CSV; a real 835 feed replaces the seed, mart SQL unchanged |
+| **Externalized condition codes** | A new RWE cohort is a seed row, not a model rewrite — clinical knowledge stays out of SQL |
+| **DuckDB for dev + CI** | Identical SQL dialect locally and in GitHub Actions at zero cost — no Snowflake credits in CI |
+| **Pydantic at the parser boundary** | Malformed FHIR raises at parse time, not silently downstream in the mart layer |
+| **`TRANSFORMER` role** | Least-privilege — dbt never touches `ACCOUNTADMIN`; the required pattern in HIPAA-adjacent environments |
+| **Dagster over Airflow** | Software-defined assets describe data lineage, not just execution order — asset-level re-runs, native lineage graph |
+| **No intermediate dbt layer** | Staging views share no business logic — an intermediate layer adds materialization cost with no clarity gain |
+| **RxNorm IDs for metformin** | `LIKE '%metformin%'` false-positives on combination therapies; concept IDs are exact and reproducible |
 
 ---
 
