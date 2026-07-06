@@ -27,7 +27,7 @@ Denied classified denials retrospectively. Trust but Verify adds AI governance. 
 |---|---|---|
 | **[Denied *(this project)*](https://github.com/ericg1212/healthcare-claims-pipeline)** | Retrospective denial classification — separate 27K systematic denials with an upstream fix from 229K documentation failures requiring a different intervention | Live |
 | [Trust but Verify](https://github.com/ericg1212/ai-healthcare-pipeline) | Clinical AI governance — LLM enrichment + rules engine cross-validation, every routing decision explainable | Live |
-| [Cleared](https://github.com/ericg1212/agentic-rcm-pipeline) | Real-time prior auth prevention — RAG-enhanced payer criteria matching at point of submission, streaming ingestion | Live |
+| [Cleared](https://github.com/ericg1212/agentic-rcm-pipeline) | Real-time prior auth prevention — in-memory payer criteria matching at point of submission, streaming ingestion | Live |
 
 ---
 
@@ -96,15 +96,15 @@ A 45.2% gap is a meaningful signal, not a concluded finding — the starting poi
 
 | Decision | Why |
 |---|---|
-| **OMOP CDM** | FDA/NIH/OHDSI standard — makes RWE cohort methodology reproducible against any OMOP-compliant dataset, not just this pipeline |
-| **Seed-based CARC attribution** | Synthea generates FHIR R4, not X12 835 EDI — no remittance files to parse. Rules live in `denial_rules.csv`: one CSV row to add a denial pattern, no SQL edits. A real 835 feed replaces the seed; mart SQL stays unchanged |
-| **Externalized condition codes** | Same principle as CARC seeds — adding a new RWE cohort is a seed row, not a model rewrite. Clinical knowledge stays out of SQL |
-| **DuckDB for dev + CI** | Snowflake credits don't belong in a CI pipeline. dbt-duckdb runs identical SQL dialect locally and in GitHub Actions at zero cost |
-| **Pydantic at the parser boundary** | Malformed FHIR references, missing fields, and invalid dates raise at parse time — not silently downstream in the mart layer |
-| **`TRANSFORMER` role** | Least-privilege: the dbt pipeline never needs `ACCOUNTADMIN`. Required pattern in any HIPAA-adjacent environment where access is auditable |
-| **Dagster over Airflow** | Airflow describes execution order; Dagster's software-defined assets describe data lineage. Asset-level re-runs and native lineage graph — no separate tooling needed |
-| **No intermediate dbt layer** | Staging views are thin OMOP wrappers with no shared business logic. `fct_denials` and `fct_rwe_cohort` apply attribution directly on staging — an intermediate layer would add materialization cost with no clarity gain |
-| **RxNorm concept IDs for metformin** | `LIKE '%metformin%'` produces false positives on combination therapies. RxNorm IDs (860975, 861004, 861007, 1807894) map to specific formulations and are reproducible across any OMOP dataset |
+| **OMOP CDM** | FDA/NIH/OHDSI standard — the RWE methodology reproduces against any OMOP dataset, not just this pipeline |
+| **Seed-based CARC attribution** | Synthea emits FHIR, not X12 835 remittances — attribution rules live in a seed CSV; a real 835 feed replaces the seed, mart SQL unchanged |
+| **Externalized condition codes** | A new RWE cohort is a seed row, not a model rewrite — clinical knowledge stays out of SQL |
+| **DuckDB for dev + CI** | Identical SQL dialect locally and in GitHub Actions at zero cost — no Snowflake credits in CI |
+| **Pydantic at the parser boundary** | Malformed FHIR raises at parse time, not silently downstream in the mart layer |
+| **`TRANSFORMER` role** | Least-privilege — dbt never touches `ACCOUNTADMIN`; the required pattern in HIPAA-adjacent environments |
+| **Dagster over Airflow** | Software-defined assets describe data lineage, not just execution order — asset-level re-runs, native lineage graph |
+| **No intermediate dbt layer** | Staging views share no business logic — an intermediate layer adds materialization cost with no clarity gain |
+| **RxNorm IDs for metformin** | `LIKE '%metformin%'` false-positives on combination therapies; concept IDs are exact and reproducible |
 
 ---
 
@@ -185,82 +185,34 @@ pytest covers `extract_uuid`, `parse_datetime`, `hash_id`, `get_coding`, `is_ins
 
 ```
 healthcare-claims-pipeline/
-├── synthea_parser/          # FHIR → OMOP parser (6 resource types)
-│   ├── parsers/             # One module per FHIR resource type
-│   ├── bundle_processor.py  # Orchestrates parser chain per bundle
-│   └── utils.py             # extract_uuid, parse_datetime, de-identification
-├── scripts/
-│   ├── load_to_snowflake.py # Bulk-loads parsed bundles → Snowflake RAW
-│   ├── create_snowflake_fixtures.py  # Dev fixture data for Snowflake
-│   └── snowflake_utils.py   # Shared connection factory
-├── dbt_project/
-│   ├── models/
-│   │   ├── staging/         # 7 views — OMOP CDM mapping
-│   │   └── mart/            # 5 tables — fct_denials, fct_rwe_cohort, dims
-│   ├── seeds/
-│   │   ├── denial_rules.csv     # CARC attribution rules (externalized)
-│   │   └── condition_codes.csv  # SNOMED codes for RWE cohort (externalized)
-│   └── profiles/profiles.yml    # dev (DuckDB) + prod (Snowflake)
-├── dagster_pipelines/
-│   ├── assets/__init__.py   # raw_claims_load multi_asset + dbt assets
-│   ├── resources/__init__.py # SnowflakeResource (ConfigurableResource)
-│   └── __init__.py          # Definitions + healthcare_pipeline job
-├── tests/
-│   └── test_smoke.py        # 40 pytest tests — parser utils, edge cases
-├── .github/
-│   ├── workflows/ci.yml     # SHA-pinned CI: lint + test + dbt-compile
-│   └── dependabot.yml       # Weekly pip + actions dependency alerts
-└── Makefile                 # generate, load-snowflake, dbt-snowflake, dagster, test
+├── synthea_parser/      # FHIR → OMOP parser (6 resource types) · de-identification
+├── scripts/             # Snowflake bulk load, fixtures, connection factory
+├── dbt_project/         # 7 staging views + 5 mart tables · 2 externalized seeds
+├── dagster_pipelines/   # raw_claims_load multi_asset + dbt assets, one pipeline job
+├── tests/               # 40 pytest tests — parser utils, edge cases
+└── Makefile             # generate, load-snowflake, dbt-snowflake, dagster, test
 ```
 
 ---
 
-## Setup
+## Quickstart
 
-### Prerequisites
-
-- Python 3.13
-- Java 17+ (for Synthea)
-- Snowflake account with `HEALTHCARE_CLAIMS` database and `TRANSFORMER` / `SYSADMIN` roles
-- Synthea JAR at `C:/Tools/synthea-with-dependencies.jar` (or update `SYNTHEA` in Makefile)
-
-### Environment
+Requires Python 3.13, Java 17+ (Synthea), and a Snowflake account with a `TRANSFORMER` role (`SYNTHEA` JAR path configurable in the Makefile).
 
 ```bash
-cp .env.example .env
-# Fill in: SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD
-```
-
-### Install
-
-```bash
+cp .env.example .env             # SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD
 pip install -r requirements.txt
-```
-
-### Run the full pipeline
-
-```bash
-# 1. Generate 2,000-patient FHIR population
-make generate
-
-# 2. Create Snowflake schema + load fixture data (first time only)
-make load-snowflake
-
-# 3. Bulk-load parsed FHIR bundles → Snowflake RAW
+make generate                    # 2,000-patient FHIR population
+make load-snowflake              # schema + fixture load (first time only)
 python scripts/load_to_snowflake.py --fhir-dir data/synthea_output
-
-# 4. Run dbt transformations (Snowflake)
-make dbt-snowflake
-
-# 5. Launch Dagster UI to run the full pipeline as a single job
-make dagster
-# → navigate to localhost:3000 → Jobs → healthcare_pipeline → Launch run
+make dbt-snowflake               # run transformations
+make dagster                     # localhost:3000 → healthcare_pipeline → Launch run
 ```
 
-### Dev mode (no Snowflake, no credits)
+Dev mode — no Snowflake, no credits:
 
 ```bash
-make dbt-dev    # runs dbt against local DuckDB
+make dbt-dev    # identical SQL against local DuckDB
 make test       # pytest + dbt compile
 ```
 
