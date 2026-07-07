@@ -36,7 +36,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: pytest
-        run: pytest tests/ -v --cov=synthea_parser --cov=dagster_pipelines
+        run: pytest tests/ -v --cov=synthea_parser --cov=dagster_pipelines --cov-report=xml
+      - uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457  # v3
+        with:
+          file: coverage.xml
+          fail_ci_if_error: false
 
   dbt-compile:
     runs-on: ubuntu-latest
