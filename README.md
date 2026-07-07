@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/codeql.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/codeql.yml)
-[![codecov](https://codecov.io/gh/ericg1212/healthcare-claims-pipeline/branch/main/graph/badge.svg)](https://codecov.io/gh/ericg1212/healthcare-claims-pipeline)
 [![Release](https://img.shields.io/github/v/release/ericg1212/healthcare-claims-pipeline?style=flat-square)](https://github.com/ericg1212/healthcare-claims-pipeline/releases)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square)](https://ericg1212.github.io/healthcare-claims-pipeline/)
 ![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-E8670A?style=flat-square)
