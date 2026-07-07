@@ -2,14 +2,15 @@
 
 [![CI](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/codeql.yml/badge.svg)](https://github.com/ericg1212/healthcare-claims-pipeline/actions/workflows/codeql.yml)
+[![codecov](https://codecov.io/gh/ericg1212/healthcare-claims-pipeline/branch/main/graph/badge.svg)](https://codecov.io/gh/ericg1212/healthcare-claims-pipeline)
 [![Release](https://img.shields.io/github/v/release/ericg1212/healthcare-claims-pipeline?style=flat-square)](https://github.com/ericg1212/healthcare-claims-pipeline/releases)
 [![dbt Docs](https://img.shields.io/badge/dbt%20Docs-live-FF694B?style=flat-square)](https://ericg1212.github.io/healthcare-claims-pipeline/)
+![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-E8670A?style=flat-square)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=flat-square&logo=snowflake&logoColor=white)
 ![dbt](https://img.shields.io/badge/dbt-1.10-FF694B?style=flat-square)
 ![Dagster](https://img.shields.io/badge/Dagster-1.13-4F4FE6?style=flat-square)
 ![HIPAA](https://img.shields.io/badge/HIPAA-compliant%20pattern-lightgrey?style=flat-square)
-![HL7 FHIR](https://img.shields.io/badge/HL7%20FHIR-R4-E8670A?style=flat-square)
 
 ![Claims](https://img.shields.io/badge/Claims-495K-0ea5e9?style=flat-square)
 ![Denial Rate](https://img.shields.io/badge/Denial%20Rate-51.9%25-ef4444?style=flat-square)
@@ -51,6 +52,36 @@ CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each w
 **Insight:** CARC 197 and 96 together represent ~27,600 systematic denials — claims where the denial pattern is deterministic and the fix is upstream of submission, not in the claim itself. CARC 16 at 89% signals a documentation and submission quality problem. The pipeline classifies every denial into one of these two work queues at the CARC level. At average reimbursement rates, the recoverable systematic denial pool represents **$1.2M+ in reclaimable revenue** — the portion with a defined upstream fix and a clear ROI case for intervention.
 
 > **On the 51.9% denial rate:** Real-world rates run 5–15%. The elevated figure reflects Synthea's broad payer simulation across Medicaid, commercial, and self-pay — a simulation artifact. The CARC attribution methodology applies identically at production volumes.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Synthea HL7 FHIR R4\n2,000-patient population"] --> B["Python FHIR Parser\n6 resource types → OMOP CDM\nPydantic v2 · de-identification"]
+    B --> C[("Snowflake RAW\n7 tables · append-only")]
+    C --> D["dbt STAGING\n7 views · OMOP mapping\ndenial flag derivation"]
+    D --> E["dbt MART\nfct_denials · fct_rwe_cohort\ndim_patient · dim_date · dim_provider"]
+    E --> F["Dagster\nhealthcare_pipeline job\nfull asset dependency graph"]
+```
+
+### FHIR Resource Mapping
+
+| FHIR Resource | OMOP CDM Target |
+|---|---|
+| Patient | PERSON |
+| Encounter | VISIT_OCCURRENCE |
+| Condition | CONDITION_OCCURRENCE (ICD-10 + SNOMED) |
+| MedicationRequest | DRUG_EXPOSURE (RxNorm) |
+| ExplanationOfBenefit | CLAIM_HEADER + CLAIM_LINE |
+| Coverage | PAYER_PLAN_PERIOD |
+
+Pydantic v2 validation and de-identification run at the FHIR parser boundary before any data reaches Snowflake.
+
+### Dagster Asset Graph
+
+![Dagster Asset Graph](docs/dagster_asset_graph.png)
 
 ---
 
@@ -120,36 +151,6 @@ A 45.2% gap is a meaningful signal, not a concluded finding — the starting poi
 | CI | GitHub Actions (SHA-pinned) | lint (flake8 + bandit + pip-audit), pytest, dbt compile |
 | Dev adapter | dbt-duckdb | Zero-cost local dev and CI — no Snowflake credits in CI |
 | Security | TRANSFORMER role, SECURITY.md, Dependabot, secret scanning | Least-privilege, supply chain and credential protection |
-
----
-
-## Architecture
-
-```mermaid
-flowchart LR
-    A["Synthea HL7 FHIR R4\n2,000-patient population"] --> B["Python FHIR Parser\n6 resource types → OMOP CDM\nPydantic v2 · de-identification"]
-    B --> C[("Snowflake RAW\n7 tables · append-only")]
-    C --> D["dbt STAGING\n7 views · OMOP mapping\ndenial flag derivation"]
-    D --> E["dbt MART\nfct_denials · fct_rwe_cohort\ndim_patient · dim_date · dim_provider"]
-    E --> F["Dagster\nhealthcare_pipeline job\nfull asset dependency graph"]
-```
-
-### FHIR Resource Mapping
-
-| FHIR Resource | OMOP CDM Target |
-|---|---|
-| Patient | PERSON |
-| Encounter | VISIT_OCCURRENCE |
-| Condition | CONDITION_OCCURRENCE (ICD-10 + SNOMED) |
-| MedicationRequest | DRUG_EXPOSURE (RxNorm) |
-| ExplanationOfBenefit | CLAIM_HEADER + CLAIM_LINE |
-| Coverage | PAYER_PLAN_PERIOD |
-
-Pydantic v2 validation and de-identification run at the FHIR parser boundary before any data reaches Snowflake.
-
-### Dagster Asset Graph
-
-![Dagster Asset Graph](docs/dagster_asset_graph.png)
 
 ---
 
