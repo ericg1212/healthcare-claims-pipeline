@@ -1,7 +1,7 @@
 # ── Core orchestration ───────────────────────────────────────────
-dagster==1.13.13
-dagster-dbt==0.29.13
-dagster-webserver==1.13.13
+dagster==1.13.14
+dagster-dbt==0.29.14
+dagster-webserver==1.13.14
 
 # ── dbt ──────────────────────────────────────────────────────────
 dbt-core==1.11.12
