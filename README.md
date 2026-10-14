@@ -118,7 +118,7 @@ The same OMOP layer answers a second question without rebuilding the pipeline: a
 | On metformin | 57 (54.8%) |
 | Not on metformin | 47 (45.2%) |
 
-A 45.2% gap is a meaningful signal, not a concluded finding — the starting point for stratification by CKD stage, eGFR band, payer, and age. Adding a new cohort requires one row in `seeds/condition_codes.csv`, no SQL changes.
+A 45.2% gap on a 104-patient synthetic cohort is descriptive only: it shows the query works, not a clinical prevalence. It is a meaningful signal, not a concluded finding — the starting point for stratification by CKD stage, eGFR band, payer, and age. Adding a new cohort requires one row in `seeds/condition_codes.csv`, no SQL changes.
 
 ---
 
