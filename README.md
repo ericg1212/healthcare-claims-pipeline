@@ -25,13 +25,13 @@ Denied classifies denials retrospectively. Trust but Verify adds AI governance. 
 
 | Pipeline | Focus | Status |
 |---|---|---|
-| **[Denied *(this project)*](https://github.com/ericg1212/healthcare-claims-pipeline)** | Retrospective denial classification — separate 27K systematic denials with an upstream fix from 229K documentation failures requiring a different intervention | Live |
-| [Trust but Verify](https://github.com/ericg1212/ai-healthcare-pipeline) | Clinical AI governance — LLM enrichment + rules engine cross-validation, every routing decision explainable | Live |
-| [Cleared](https://github.com/ericg1212/agentic-rcm-pipeline) | Real-time prior auth prevention — in-memory payer criteria matching at point of submission, streaming ingestion | Live |
+| **[Denied *(this project)*](https://github.com/ericg1212/healthcare-claims-pipeline)** | Retrospective denial classification — separate 27K systematic denials with an upstream fix from 229K documentation failures requiring a different intervention | Complete |
+| [Trust but Verify](https://github.com/ericg1212/ai-healthcare-pipeline) | Clinical AI governance — LLM enrichment + rules engine cross-validation, every routing decision explainable | Complete |
+| [Cleared](https://github.com/ericg1212/agentic-rcm-pipeline) | Real-time prior auth prevention — in-memory payer criteria matching at point of submission, streaming ingestion | Complete |
 
 ---
 
-**Denied.** Not every denied claim is a rework opportunity — and not all denials are the same problem. This pipeline delivers two outputs from one infrastructure: CARC-level denial attribution across 257K claims that separates systematic denials from documentation failures (RCM), and a T2D+CKD metformin utilization cohort that connects the same claims data to clinical drug utilization signals (RWE).
+**Denied sorts 257K denied claims into the two queues that need different fixes: ~27.6K systematic denials with a single upstream fix ($1.2M+ recoverable) and 229K documentation failures.** It runs on 495K synthetic FHIR R4 claims through Snowflake, dbt, and Dagster, with correctness held by 83 dbt tests and 40 pytest tests in CI. The same claims also feed a real-world-evidence cohort of 104 patients. The full pipeline also runs on a laptop against local DuckDB — no cloud account, no credits.
 
 CMS-0057-F mandates that payers respond to prior authorization requests within 72 hours for urgent cases and 7 days for standard — creating immediate downstream pressure on providers to submit complete, well-documented claims or face accelerating denial rates. CARC 197 (prior-auth gaps) is exactly the category this regulation targets.
 
