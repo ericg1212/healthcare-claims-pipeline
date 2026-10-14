@@ -24,7 +24,13 @@ jobs:
       - name: bandit
         run: bandit -r synthea_parser/ dagster_pipelines/ -ll
       - name: pip-audit
-        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2025-183
+        # sqlparse PYSEC-2026-3696..3699/3923: fixed only in 0.6.0, but dbt-core 1.11.x caps
+        # sqlparse<0.6.0 (1.12.x lifts it). Dev/CI-only transitive dep; remove on dbt 1.12 bump.
+        run: >-
+          pip-audit -r requirements.txt --ignore-vuln PYSEC-2025-183
+          --ignore-vuln PYSEC-2026-3696 --ignore-vuln PYSEC-2026-3697
+          --ignore-vuln PYSEC-2026-3698 --ignore-vuln PYSEC-2026-3699
+          --ignore-vuln PYSEC-2026-3923
 
   test:
     runs-on: ubuntu-latest
