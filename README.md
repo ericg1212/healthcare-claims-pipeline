@@ -14,7 +14,7 @@
 ![Claims](https://img.shields.io/badge/Claims-495K-0ea5e9?style=flat-square)
 ![Denial Rate](https://img.shields.io/badge/Denial%20Rate-51.9%25-ef4444?style=flat-square)
 ![Recoverable](https://img.shields.io/badge/Recoverable-%241.2M%2B-22c55e?style=flat-square)
-![dbt Tests](https://img.shields.io/badge/dbt%20Tests-83-FF694B?style=flat-square)
+![dbt Tests](https://img.shields.io/badge/dbt%20Tests-73-FF694B?style=flat-square)
 ![pytest](https://img.shields.io/badge/pytest-40-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
 
 **By [Eric Grynspan](https://www.linkedin.com/in/ericgrynspan/)** &nbsp;·&nbsp; [dbt Docs](https://ericg1212.github.io/healthcare-claims-pipeline/) &nbsp;·&nbsp; [Trust but Verify →](https://github.com/ericg1212/ai-healthcare-pipeline)
@@ -31,7 +31,7 @@ Denied classifies denials retrospectively. Trust but Verify adds AI governance. 
 
 ---
 
-**Denied sorts 257K denied claims into the two queues that need different fixes: ~27.6K systematic denials with a single upstream fix ($1.2M+ recoverable) and 229K documentation failures.** It runs on 495K synthetic FHIR R4 claims through Snowflake, dbt, and Dagster, with correctness held by 83 dbt tests and 40 pytest tests in CI. The same claims also feed a real-world-evidence cohort of 104 patients. The full pipeline also runs on a laptop against local DuckDB — no cloud account, no credits.
+**Denied sorts 257K denied claims into the two queues that need different fixes: ~27.6K systematic denials with a single upstream fix ($1.2M+ recoverable) and 229K documentation failures.** It runs on 495K synthetic FHIR R4 claims through Snowflake, dbt, and Dagster, with correctness held by 73 dbt tests and 40 pytest tests in CI. The same claims also feed a real-world-evidence cohort of 104 patients. The full pipeline also runs on a laptop against local DuckDB — no cloud account, no credits.
 
 CMS-0057-F mandates that payers respond to prior authorization requests within 72 hours for urgent cases and 7 days for standard — creating immediate downstream pressure on providers to submit complete, well-documented claims or face accelerating denial rates. CARC 197 (prior-auth gaps) is exactly the category this regulation targets.
 
@@ -145,7 +145,7 @@ A 45.2% gap on a 104-patient synthetic cohort is descriptive only: it shows the 
 | Data generation | Synthea 3.x (Java) | Synthetic HL7 FHIR R4 population (simulates EHR-originated payloads) — PHI-free by design |
 | Ingestion | Python 3.13 + Pydantic v2 | EHR-originated HL7 FHIR R4 parser, OMOP mapping, de-identification |
 | Storage | Snowflake | RAW, STAGING, MART schemas; TRANSFORMER role |
-| Transformation | dbt 1.10 + dbt-snowflake | 12 models, 2 seeds, 83 tests |
+| Transformation | dbt 1.10 + dbt-snowflake | 12 models, 2 seeds, 73 tests |
 | Orchestration | Dagster 1.13 | Multi-asset pipeline, full dependency graph |
 | CI | GitHub Actions (SHA-pinned) | lint (flake8 + bandit + pip-audit), pytest, dbt compile |
 | Dev adapter | dbt-duckdb | Zero-cost local dev and CI — no Snowflake credits in CI |
@@ -165,7 +165,7 @@ Seven OMOP CDM staging views clean and type-coerce the RAW tables. The denial fl
 
 ### dbt tests
 
-83 tests across 12 models: `not_null`, `unique`, `accepted_values`, `relationships`. Every primary key, every foreign key, every categorical field is tested. The `accepted_values` test on `carc_code` (`'197'`, `'96'`, `'16'`) and `denial_type` (`'systematic'`, `'random'`) ensures CARC attribution logic never silently produces invalid output.
+73 tests across 12 models: `not_null`, `unique`, `accepted_values`, `relationships`. Every primary key, every foreign key, every categorical field is tested. The `accepted_values` test on `carc_code` (`'197'`, `'96'`, `'16'`) and `denial_type` (`'systematic'`, `'random'`) ensures CARC attribution logic never silently produces invalid output.
 
 ---
 
