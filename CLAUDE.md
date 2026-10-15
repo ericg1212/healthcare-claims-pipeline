@@ -6,7 +6,7 @@ RCM + RWE pipeline. Synthea FHIR R4 → Python parser → S3 → Snowflake RAW �
 ## Key Numbers
 - 257K denied / 495K total claims | 51.9% denial rate | $1.2M+ recoverable
 - 104 T2D+CKD patients | 54.8% metformin utilization
-- 40 pytest + 83 dbt tests | CI green
+- 40 pytest + 73 dbt tests | CI green
 
 ## Stack
 | Layer | Tool |
@@ -30,7 +30,7 @@ make generate          # Synthea 2000 patients
 make parse             # FHIR → Snowflake RAW
 pytest tests/ -v       # 40 unit tests
 dbt run                # all models
-dbt test               # 83 tests
+dbt test               # 73 tests
 dagster dev            # Dagster UI at localhost:3000
 dbt docs serve         # live at ericg1212.github.io/healthcare-claims-pipeline
 ```
