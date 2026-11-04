@@ -59,7 +59,7 @@ CARC 197 and 96 are systematic denials — prior-auth and formulary gaps, each w
 ```mermaid
 flowchart LR
     A["Synthea HL7 FHIR R4\n2,000-patient population"] --> B["Python FHIR Parser\n6 resource types → OMOP CDM\nPydantic v2 · de-identification"]
-    B --> C[("Snowflake RAW\n7 tables · append-only")]
+    B --> C[("Snowflake RAW\n7 tables · full reload each run")]
     C --> D["dbt STAGING\n7 views · OMOP mapping\ndenial flag derivation"]
     D --> E["dbt MART\nfct_denials · fct_rwe_cohort\ndim_patient · dim_date · dim_provider"]
     E --> F["Dagster\nhealthcare_pipeline job\nfull asset dependency graph"]
